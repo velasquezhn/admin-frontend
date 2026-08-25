@@ -39,11 +39,6 @@ class ApiService {
       return result;
     } catch (error) {
       console.error('API request failed:', error);
-      // Return mock data if backend is not available
-      if (error.message.includes('Failed to fetch') || error.message.includes('CONNECTION') || error.name === 'TypeError') {
-        console.warn('Backend not available, returning mock data for endpoint:', endpoint);
-        return this.getMockData(endpoint);
-      }
       throw error;
     }
   }
