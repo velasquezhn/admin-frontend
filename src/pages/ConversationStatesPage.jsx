@@ -21,8 +21,7 @@ import {
   Alert,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
-
-const API_URL = '/admin/conversation-states';
+import apiService from '../services/apiService';
 
 const initialFormState = {
   user_number: '',
@@ -41,8 +40,7 @@ const ConversationStatesPage = () => {
   const fetchStates = async () => {
     setLoading(true);
     try {
-      const res = await fetch(API_URL);
-      const data = await res.json();
+      const data = await apiService.getConversationStates();
       setStates(data);
     } catch (error) {
       setSnackbar({ open: true, message: 'Error cargando estados de conversación', severity: 'error' });
@@ -88,21 +86,12 @@ const ConversationStatesPage = () => {
     }
 
     try {
-      let res;
+      let data;
       if (editId) {
-        res = await fetch(`${API_URL}/${editId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        });
+        data = await apiService.updateConversationState(editId, form);
       } else {
-        res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
-        });
+        data = await apiService.createConversationState(form);
       }
-      const data = await res.json();
       if (data.success) {
         setSnackbar({ open: true, message: 'Guardado exitoso', severity: 'success' });
         fetchStates();
@@ -118,8 +107,7 @@ const ConversationStatesPage = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Estás seguro de eliminar este estado de conversación?')) return;
     try {
-      const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-      const data = await res.json();
+      const data = await apiService.deleteConversationState(id);
       if (data.success) {
         setSnackbar({ open: true, message: 'Estado eliminado', severity: 'success' });
         fetchStates();

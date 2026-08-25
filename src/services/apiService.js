@@ -3,15 +3,16 @@ const API_BASE_URL = process.env.REACT_APP_API_URL;
 class ApiService {
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
+    const { headers: optionHeaders = {}, ...requestOptions } = options;
     let token = localStorage.getItem('adminToken');
     // Si no hay token, intentar obtenerlo de sessionStorage (fallback)
     if (!token) token = sessionStorage.getItem('adminToken');
     // Si la ruta es /admin/* y no hay token, mostrar advertencia
     const isAdminRoute = endpoint.startsWith('/admin/');
-    const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
+    const headers = { ...optionHeaders };
+    if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
     if (isAdminRoute) {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -20,8 +21,8 @@ class ApiService {
       }
     }
     const config = {
+      ...requestOptions,
       headers,
-      ...options,
     };
 
     try {
