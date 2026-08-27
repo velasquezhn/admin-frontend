@@ -59,6 +59,9 @@ import {
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import apiService from '../services/apiService';
 
+const PENDING_STATUSES = ['pendiente_autorizacion', 'esperando_pago', 'pendiente_verificacion'];
+const REJECTABLE_STATUSES = new Set(PENDING_STATUSES);
+
 /**
  * 🏨 INTERFAZ PROFESIONAL DE GESTIÓN DE RESERVAS MEJORADA
  * 
@@ -109,7 +112,7 @@ const ReservationsPageSimplePro = () => {
     user_id: '',
     start_date: '',
     end_date: '',
-    status: 'pendiente',
+    status: 'pendiente_autorizacion',
     total_price: '',
     personas: ''
   });
@@ -168,7 +171,7 @@ const ReservationsPageSimplePro = () => {
         filtered.sort((a, b) => new Date(b.end_date) - new Date(a.end_date));
         break;
       case 2: // Pendientes
-        filtered = filtered.filter(r => r.status === 'pendiente');
+        filtered = filtered.filter(r => PENDING_STATUSES.includes(r.status));
         filtered.sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
         break;
       case 3: // Todas
@@ -222,7 +225,7 @@ const ReservationsPageSimplePro = () => {
     return {
       upcoming: reservations.filter(r => new Date(r.start_date) >= today).length,
       past: reservations.filter(r => new Date(r.end_date) < today).length,
-      pending: reservations.filter(r => r.status === 'pendiente').length,
+      pending: reservations.filter(r => PENDING_STATUSES.includes(r.status)).length,
       total: reservations.length
     };
   };
@@ -237,7 +240,7 @@ const ReservationsPageSimplePro = () => {
         user_id: reservation.user_id || '',
         start_date: reservation.start_date || '',
         end_date: reservation.end_date || '',
-        status: reservation.status || 'pendiente',
+        status: reservation.status || 'pendiente_autorizacion',
         total_price: reservation.total_price || '',
         personas: reservation.personas || ''
       });
@@ -247,7 +250,7 @@ const ReservationsPageSimplePro = () => {
         user_id: '',
         start_date: '',
         end_date: '',
-        status: 'pendiente',
+        status: 'pendiente_autorizacion',
         total_price: '',
         personas: ''
       });
@@ -279,7 +282,7 @@ const ReservationsPageSimplePro = () => {
   };
 
   const handleConfirm = async (id) => {
-    if (!window.confirm('¿Confirmar esta reserva y notificar al huésped por WhatsApp?')) return;
+    if (!window.confirm('¿Confirmar definitivamente esta reserva después de revisar el comprobante?')) return;
     try {
       const result = await apiService.approveReservation(id);
       showSnackbar(
@@ -292,6 +295,20 @@ const ReservationsPageSimplePro = () => {
     } catch (error) {
       console.error('Error confirming reservation:', error);
       showSnackbar('No se pudo confirmar. Verifica el comprobante y la disponibilidad.', 'error');
+    }
+  };
+
+  const handleAuthorizePayment = async (id) => {
+    if (!window.confirm('¿Autorizar al huésped para realizar el pago y enviar el comprobante?')) return;
+    try {
+      const result = await apiService.authorizeReservationPayment(id);
+      showSnackbar(result.notificationSent
+        ? 'Pago autorizado y huésped notificado por WhatsApp'
+        : 'Pago autorizado; el aviso de WhatsApp quedó pendiente', result.notificationSent ? 'success' : 'warning');
+      fetchReservations();
+    } catch (error) {
+      console.error('Error authorizing payment:', error);
+      showSnackbar('No se pudo autorizar el pago. Verifica la disponibilidad.', 'error');
     }
   };
 
@@ -368,12 +385,21 @@ const ReservationsPageSimplePro = () => {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'confirmada': return 'success';
-      case 'pendiente': return 'warning';
+      case 'pendiente_autorizacion': return 'warning';
+      case 'esperando_pago': return 'info';
+      case 'pendiente_verificacion': return 'secondary';
       case 'cancelada': return 'error';
       case 'rechazada': return 'error';
       default: return 'default';
     }
   };
+
+  const getStatusLabel = (status) => ({
+    pendiente_autorizacion: 'ESPERA AUTORIZACIÓN',
+    esperando_pago: 'PAGO AUTORIZADO',
+    pendiente_verificacion: 'REVISAR COMPROBANTE',
+    confirmada: 'CONFIRMADA', cancelada: 'CANCELADA', rechazada: 'RECHAZADA'
+  }[status] || String(status || '').toUpperCase());
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-HN', {
@@ -547,7 +573,9 @@ const ReservationsPageSimplePro = () => {
                         onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                       >
                         <MenuItem value="">Todos</MenuItem>
-                        <MenuItem value="pendiente">Pendiente</MenuItem>
+                        <MenuItem value="pendiente_autorizacion">Espera autorización</MenuItem>
+                        <MenuItem value="esperando_pago">Pago autorizado</MenuItem>
+                        <MenuItem value="pendiente_verificacion">Revisar comprobante</MenuItem>
                         <MenuItem value="confirmada">Confirmada</MenuItem>
                         <MenuItem value="cancelada">Cancelada</MenuItem>
                       </Select>
@@ -719,7 +747,7 @@ const ReservationsPageSimplePro = () => {
                           </TableCell>
                           <TableCell>
                             <Chip
-                              label={reservation.status?.toUpperCase()}
+                              label={getStatusLabel(reservation.status)}
                               color={getStatusColor(reservation.status)}
                               size="small"
                               sx={{ fontWeight: 600, fontSize: '0.75rem' }}
@@ -735,13 +763,18 @@ const ReservationsPageSimplePro = () => {
                           </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              {reservation.status === 'pendiente' && (
-                                <Tooltip title={reservation.comprobante_nombre_archivo ? 'Aprobar y notificar' : 'Falta comprobante'}>
-                                  <span>
+                              {reservation.status === 'pendiente_autorizacion' && (
+                                <Tooltip title="Autorizar pago y notificar al huésped">
+                                  <IconButton size="small" onClick={() => handleAuthorizePayment(reservation.reservation_id)} sx={{ color: 'info.main' }}>
+                                    <LocalAtm fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                              {reservation.status === 'pendiente_verificacion' && (
+                                <Tooltip title="Confirmar después de revisar el comprobante">
                                   <IconButton
                                     size="small"
                                     onClick={() => handleConfirm(reservation.reservation_id)}
-                                    disabled={!reservation.comprobante_nombre_archivo}
                                     sx={{ 
                                       color: 'success.main',
                                       '&:hover': { backgroundColor: 'rgba(76, 175, 80, 0.1)' }
@@ -749,10 +782,9 @@ const ReservationsPageSimplePro = () => {
                                   >
                                     <CheckIcon fontSize="small" />
                                   </IconButton>
-                                  </span>
                                 </Tooltip>
                               )}
-                              {reservation.status === 'pendiente' && (
+                              {REJECTABLE_STATUSES.has(reservation.status) && (
                                 <Tooltip title="Rechazar y notificar">
                                   <IconButton
                                     size="small"
@@ -915,7 +947,9 @@ const ReservationsPageSimplePro = () => {
                   label="Estado"
                   onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                 >
-                  <MenuItem value="pendiente">🟡 Pendiente</MenuItem>
+                  <MenuItem value="pendiente_autorizacion">🟡 Espera autorización</MenuItem>
+                  <MenuItem value="esperando_pago">🔵 Pago autorizado</MenuItem>
+                  <MenuItem value="pendiente_verificacion">🟣 Revisar comprobante</MenuItem>
                   <MenuItem value="confirmada">🟢 Confirmada</MenuItem>
                   <MenuItem value="cancelada">🔴 Cancelada</MenuItem>
                   <MenuItem value="rechazada">🔴 Rechazada</MenuItem>

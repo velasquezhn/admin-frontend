@@ -21,6 +21,12 @@ describe('acciones administrativas de reservas', () => {
     }));
   });
 
+  it('autoriza el pago antes del comprobante', async () => {
+    const { default: apiService } = await import('./apiService');
+    await apiService.authorizeReservationPayment(7);
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/reservations/7/authorize-payment'), expect.objectContaining({ method: 'POST' }));
+  });
+
   it('envía el motivo al rechazar', async () => {
     const { default: apiService } = await import('./apiService');
     await apiService.rejectReservation(8, 'Comprobante ilegible');

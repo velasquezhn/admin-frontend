@@ -504,6 +504,12 @@ class ApiService {
     });
   }
 
+  async authorizeReservationPayment(id) {
+    return this.request(`/admin/reservations/${id}/authorize-payment`, {
+      method: 'POST', body: JSON.stringify({})
+    });
+  }
+
   async rejectReservation(id, reason) {
     return this.request(`/admin/reservations/${id}/reject`, {
       method: 'POST',
