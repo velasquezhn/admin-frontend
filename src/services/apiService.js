@@ -705,6 +705,15 @@ class ApiService {
     return this.request(`/admin/whatsapp-admins/${id}/test`, { method: 'POST' });
   }
 
+  async getNotifications(status = '') {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    return this.request(`/admin/notifications${query}`);
+  }
+
+  async retryNotification(id) {
+    return this.request(`/admin/notifications/${id}/retry`, { method: 'POST' });
+  }
+
   // Conversation States endpoints
   async getConversationStates() {
     return this.request('/admin/conversation-states');

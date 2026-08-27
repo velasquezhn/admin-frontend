@@ -22,6 +22,7 @@ const CabinTypesPage = lazy(() => import('./pages/CabinTypesPage'));
 const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage'));
 const ChangePasswordPage = lazy(() => import('./pages/ChangePasswordPage'));
 const AuditLogsPage = lazy(() => import('./pages/AuditLogsPage'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 
 // Tema personalizado
 const theme = createTheme({
@@ -149,6 +150,7 @@ function App() {
         <Route path="/admin-users" element={<PrivateRoute allowedRoles={['superadmin']}><AdminUsersPage /></PrivateRoute>} />
         <Route path="/conversation-states" element={<PrivateRoute allowedRoles={['superadmin']}><ConversationStatesPage /></PrivateRoute>} />
         <Route path="/audit-logs" element={<PrivateRoute allowedRoles={['superadmin']}><AuditLogsPage /></PrivateRoute>} />
+        <Route path="/notifications" element={<PrivateRoute allowedRoles={['superadmin']}><NotificationsPage /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>

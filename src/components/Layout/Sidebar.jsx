@@ -25,6 +25,7 @@ import {
   SupervisorAccount as AdminIcon,
   LocalActivity as ActivitiesIcon,
   FactCheck as AuditIcon,
+  NotificationsActive as NotificationsIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { currentAdmin } from '../../utils/adminRoles';
@@ -102,6 +103,13 @@ const menuItems = [
     icon: <TrendingUpIcon />,
     path: '/reports',
     color: '#ef4444'
+  },
+  {
+    text: 'Mensajes pendientes',
+    icon: <NotificationsIcon />,
+    path: '/notifications',
+    color: '#dc2626',
+    roles: ['superadmin']
   },
   {
     text: 'Auditoría',
