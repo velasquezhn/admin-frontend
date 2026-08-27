@@ -308,7 +308,9 @@ const ReservationsPageSimplePro = () => {
       fetchReservations();
     } catch (error) {
       console.error('Error authorizing payment:', error);
-      showSnackbar('No se pudo autorizar el pago. Verifica la disponibilidad.', 'error');
+      showSnackbar(error.code === 'PAYMENT_SETTINGS_INCOMPLETE'
+        ? 'Primero registra las cuentas bancarias en Configuración > Pagos y anticipo.'
+        : 'No se pudo autorizar el pago. Verifica la disponibilidad.', 'error');
     }
   };
 

@@ -27,6 +27,12 @@ describe('acciones administrativas de reservas', () => {
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/reservations/7/authorize-payment'), expect.objectContaining({ method: 'POST' }));
   });
 
+  it('guarda el porcentaje y las cuentas de pago', async () => {
+    const { default: apiService } = await import('./apiService');
+    await apiService.updatePaymentSettings({ deposit_percentage: 50, bank_accounts: ['Banco - 123'], notes: '' });
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/payment-settings'), expect.objectContaining({ method: 'PUT' }));
+  });
+
   it('envía el motivo al rechazar', async () => {
     const { default: apiService } = await import('./apiService');
     await apiService.rejectReservation(8, 'Comprobante ilegible');

@@ -34,7 +34,12 @@ class ApiService {
           alert(errorMsg);
           throw new Error(errorMsg);
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let payload = {};
+        try { payload = await response.json(); } catch { payload = {}; }
+        const requestError = new Error(payload.message || `HTTP error! status: ${response.status}`);
+        requestError.code = payload.code;
+        requestError.status = response.status;
+        throw requestError;
       }
       const result = await response.json();
       return result;
@@ -507,6 +512,16 @@ class ApiService {
   async authorizeReservationPayment(id) {
     return this.request(`/admin/reservations/${id}/authorize-payment`, {
       method: 'POST', body: JSON.stringify({})
+    });
+  }
+
+  async getPaymentSettings() {
+    return this.request('/admin/payment-settings');
+  }
+
+  async updatePaymentSettings(data) {
+    return this.request('/admin/payment-settings', {
+      method: 'PUT', body: JSON.stringify(data)
     });
   }
 

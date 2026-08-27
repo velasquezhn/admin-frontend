@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Stack, Switch, TextField, Typography } from '@mui/material';
-import { Add, Delete, Edit, Send, WhatsApp } from '@mui/icons-material';
+import { AccountBalance, Add, Delete, Edit, Save, Send, WhatsApp } from '@mui/icons-material';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import apiService from '../services/apiService';
 
@@ -13,12 +13,21 @@ const SettingsPageSimple = () => {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState(null);
+  const [payment, setPayment] = useState({ deposit_percentage: 50, bank_accounts: '', notes: '' });
+  const [savingPayment, setSavingPayment] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
-      const response = await apiService.getWhatsAppAdmins();
-      setAdmins(response.data || []);
+      const [adminsResponse, paymentResponse] = await Promise.all([
+        apiService.getWhatsAppAdmins(), apiService.getPaymentSettings()
+      ]);
+      setAdmins(adminsResponse.data || []);
+      setPayment({
+        deposit_percentage: paymentResponse.data?.deposit_percentage ?? 50,
+        bank_accounts: (paymentResponse.data?.bank_accounts || []).join('\n'),
+        notes: paymentResponse.data?.notes || ''
+      });
     } catch { setMessage({ severity: 'error', text: 'No se pudo cargar la configuración.' }); }
     finally { setLoading(false); }
   };
@@ -62,6 +71,24 @@ const SettingsPageSimple = () => {
     } catch { setMessage({ severity: 'error', text: 'No se pudo eliminar el administrador.' }); }
   };
 
+  const savePayment = async () => {
+    setSavingPayment(true);
+    try {
+      const response = await apiService.updatePaymentSettings({
+        deposit_percentage: Number(payment.deposit_percentage),
+        bank_accounts: payment.bank_accounts.split(/\r?\n/).map((item) => item.trim()).filter(Boolean),
+        notes: payment.notes
+      });
+      setPayment({
+        deposit_percentage: response.data.deposit_percentage,
+        bank_accounts: response.data.bank_accounts.join('\n'),
+        notes: response.data.notes || ''
+      });
+      setMessage({ severity: 'success', text: 'Instrucciones de pago guardadas. Ya pueden autorizarse pagos.' });
+    } catch { setMessage({ severity: 'error', text: 'No se pudo guardar. Revisa el porcentaje y los datos de cuenta.' }); }
+    finally { setSavingPayment(false); }
+  };
+
   return (
     <DashboardLayout title="Configuración">
       <Stack spacing={3}>
@@ -85,6 +112,38 @@ const SettingsPageSimple = () => {
               </Stack>
             ))}</Stack>
           )}
+        </CardContent></Card>
+        <Card><CardContent>
+          <Stack spacing={2.5}>
+            <Box>
+              <Stack direction="row" spacing={1} alignItems="center"><AccountBalance color="primary" /><Typography variant="h5">Pagos y anticipo</Typography></Stack>
+              <Typography color="text.secondary" mt={1}>Estos datos se envían al huésped únicamente después de que un administrador autoriza el pago.</Typography>
+            </Box>
+            <TextField
+              label="Porcentaje de anticipo"
+              type="number"
+              value={payment.deposit_percentage}
+              onChange={(e) => setPayment({ ...payment, deposit_percentage: e.target.value })}
+              inputProps={{ min: 1, max: 100 }}
+              helperText="Regla actual: 50 % del total de la reserva."
+            />
+            <TextField
+              label="Cuentas bancarias"
+              multiline minRows={4}
+              value={payment.bank_accounts}
+              onChange={(e) => setPayment({ ...payment, bank_accounts: e.target.value })}
+              placeholder={'Una cuenta por línea. Ejemplo:\nBanco - tipo de cuenta - número - titular'}
+              helperText="No se podrá autorizar el pago mientras este campo esté vacío."
+            />
+            <TextField
+              label="Instrucciones adicionales"
+              multiline minRows={2}
+              value={payment.notes}
+              onChange={(e) => setPayment({ ...payment, notes: e.target.value })}
+              placeholder="Ejemplo: Escribe el código de reserva en la referencia."
+            />
+            <Box><Button variant="contained" startIcon={savingPayment ? <CircularProgress size={18} color="inherit" /> : <Save />} onClick={savePayment} disabled={savingPayment || !payment.bank_accounts.trim()}>Guardar pagos</Button></Box>
+          </Stack>
         </CardContent></Card>
         <Alert severity="info">Cada administrador debe enviar primero <strong>/admin</strong> al WhatsApp de Villas Julie para abrir la ventana de atención de Meta.</Alert>
       </Stack>
