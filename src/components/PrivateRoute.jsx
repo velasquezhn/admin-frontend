@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
+import { currentAdmin, normalizeAdminRole } from '../utils/adminRoles';
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = ({ children, allowedRoles = ['admin', 'superadmin'], allowPasswordChange = false }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,7 +44,11 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  const user = currentAdmin();
+  if (user.mustChangePassword && !allowPasswordChange) return <Navigate to="/change-password" replace />;
+  if (!allowedRoles.map(normalizeAdminRole).includes(user.role)) return <Navigate to="/" replace />;
+  return children;
 };
 
 export default PrivateRoute;

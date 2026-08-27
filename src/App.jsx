@@ -20,6 +20,8 @@ const ActivitiesPage = lazy(() => import('./pages/ActivitiesPage'));
 const ConversationStatesPage = lazy(() => import('./pages/ConversationStatesPage'));
 const CabinTypesPage = lazy(() => import('./pages/CabinTypesPage'));
 const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage'));
+const ChangePasswordPage = lazy(() => import('./pages/ChangePasswordPage'));
+const AuditLogsPage = lazy(() => import('./pages/AuditLogsPage'));
 
 // Tema personalizado
 const theme = createTheme({
@@ -128,6 +130,7 @@ function App() {
       <Suspense fallback={<div role="status" style={{ padding: 32 }}>Cargando panel…</div>}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/change-password" element={<PrivateRoute allowPasswordChange><ChangePasswordPage /></PrivateRoute>} />
         <Route path="/" element={<PrivateRoute><DashboardSimple /></PrivateRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><DashboardSimple /></PrivateRoute>} />
         <Route path="/users" element={<PrivateRoute><UsersPageSimple /></PrivateRoute>} />
@@ -140,11 +143,12 @@ function App() {
         <Route path="/calendar-improved" element={<PrivateRoute><CalendarPageImproved /></PrivateRoute>} />
         <Route path="/calendar-demo" element={<PrivateRoute><CalendarFeaturesDemo /></PrivateRoute>} />
         <Route path="/reports" element={<PrivateRoute><ReportsPageSimple /></PrivateRoute>} />
-        <Route path="/settings" element={<PrivateRoute><SettingsPageSimple /></PrivateRoute>} />
+        <Route path="/settings" element={<PrivateRoute allowedRoles={['superadmin']}><SettingsPageSimple /></PrivateRoute>} />
         <Route path="/activities" element={<PrivateRoute><ActivitiesPage /></PrivateRoute>} />
         <Route path="/cabin-types" element={<PrivateRoute><CabinTypesPage /></PrivateRoute>} />
-        <Route path="/admin-users" element={<PrivateRoute><AdminUsersPage /></PrivateRoute>} />
-        <Route path="/conversation-states" element={<PrivateRoute><ConversationStatesPage /></PrivateRoute>} />
+        <Route path="/admin-users" element={<PrivateRoute allowedRoles={['superadmin']}><AdminUsersPage /></PrivateRoute>} />
+        <Route path="/conversation-states" element={<PrivateRoute allowedRoles={['superadmin']}><ConversationStatesPage /></PrivateRoute>} />
+        <Route path="/audit-logs" element={<PrivateRoute allowedRoles={['superadmin']}><AuditLogsPage /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>

@@ -24,8 +24,10 @@ import {
   Category as CategoryIcon,
   SupervisorAccount as AdminIcon,
   LocalActivity as ActivitiesIcon,
+  FactCheck as AuditIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { currentAdmin } from '../../utils/adminRoles';
 
 const menuItems = [
   {
@@ -92,7 +94,8 @@ const menuItems = [
     icon: <AdminIcon />,
     path: '/admin-users',
     color: '#8b5cf6',
-    badge: 'Admin'
+    badge: 'Admin',
+    roles: ['superadmin']
   },
   {
     text: 'Reportes',
@@ -101,10 +104,18 @@ const menuItems = [
     color: '#ef4444'
   },
   {
+    text: 'Auditoría',
+    icon: <AuditIcon />,
+    path: '/audit-logs',
+    color: '#7c3aed',
+    roles: ['superadmin']
+  },
+  {
     text: 'Configuración',
     icon: <SettingsIcon />,
     path: '/settings',
-    color: '#6b7280'
+    color: '#6b7280',
+    roles: ['superadmin']
   },
 ];
 
@@ -112,6 +123,7 @@ const Sidebar = ({ onClose, autoClose = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
+  const user = currentAdmin();
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -158,7 +170,7 @@ const Sidebar = ({ onClose, autoClose = false }) => {
       {/* Navigation Menu */}
       <Box sx={{ flex: 1, pt: 2 }}>
         <List sx={{ px: 2 }}>
-          {menuItems.map((item) => {
+          {menuItems.filter((item) => !item.roles || item.roles.includes(user.role)).map((item) => {
             const isActive = location.pathname === item.path;
             
             return (

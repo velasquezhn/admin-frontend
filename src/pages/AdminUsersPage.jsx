@@ -157,8 +157,8 @@ const AdminUsersPage = () => {
           return;
         }
         
-        if (formData.password.length < 8) {
-          showSnackbar('La contraseña debe tener al menos 8 caracteres', 'error');
+        if (formData.password.length < 10 || !/[A-Za-z]/.test(formData.password) || !/\d/.test(formData.password)) {
+          showSnackbar('La contraseña debe tener al menos 10 caracteres, letras y números', 'error');
           return;
         }
 
@@ -195,8 +195,8 @@ const AdminUsersPage = () => {
         return;
       }
       
-      if (passwordData.newPassword.length < 8) {
-        showSnackbar('La contraseña debe tener al menos 8 caracteres', 'error');
+      if (passwordData.newPassword.length < 10 || !/[A-Za-z]/.test(passwordData.newPassword) || !/\d/.test(passwordData.newPassword)) {
+        showSnackbar('La contraseña debe tener al menos 10 caracteres, letras y números', 'error');
         return;
       }
       
@@ -320,7 +320,7 @@ const AdminUsersPage = () => {
                   Super Admins
                 </Typography>
                 <Typography variant="h4" color="primary.main">
-                  {admins.filter(admin => admin.role === 'super_admin').length}
+                  {admins.filter(admin => ['superadmin', 'super_admin'].includes(admin.role)).length}
                 </Typography>
               </CardContent>
             </Card>
@@ -368,7 +368,7 @@ const AdminUsersPage = () => {
                     <TableCell>
                       <Chip
                         label={admin.role}
-                        color={admin.role === 'super_admin' ? 'secondary' : 'default'}
+                        color={['superadmin', 'super_admin'].includes(admin.role) ? 'secondary' : 'default'}
                         size="small"
                       />
                     </TableCell>
@@ -478,7 +478,7 @@ const AdminUsersPage = () => {
                       onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                     >
                       <MenuItem value="admin">Admin</MenuItem>
-                      <MenuItem value="super_admin">Super Admin</MenuItem>
+                      <MenuItem value="superadmin">Superadministrador</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -501,7 +501,7 @@ const AdminUsersPage = () => {
                           </IconButton>
                         ),
                       }}
-                      helperText="Mínimo 8 caracteres"
+                      helperText="Mínimo 10 caracteres, con letras y números"
                     />
                   </Grid>
                 )}
@@ -564,7 +564,7 @@ const AdminUsersPage = () => {
                         </IconButton>
                       ),
                     }}
-                    helperText="Mínimo 8 caracteres"
+                    helperText="Mínimo 10 caracteres, con letras y números"
                   />
                 </Grid>
                 <Grid item xs={12}>

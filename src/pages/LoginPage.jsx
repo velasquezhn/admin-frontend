@@ -26,7 +26,7 @@ const LoginPage = () => {
       if (data.success && data.data) {
         localStorage.setItem('adminToken', data.data.token);
         localStorage.setItem('adminUser', JSON.stringify(data.data.user));
-        navigate('/');
+        navigate(data.data.user.mustChangePassword ? '/change-password' : '/');
       } else {
         setError(data.message || 'Usuario o contraseña incorrectos');
       }

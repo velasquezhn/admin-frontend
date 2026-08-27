@@ -26,6 +26,7 @@ import {
 } from '@mui/icons-material';
 import Sidebar from './Sidebar';
 import { useNavigate } from 'react-router-dom';
+import { currentAdmin } from '../../utils/adminRoles';
 
 const drawerWidth = 280;
 
@@ -56,7 +57,7 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
     handleProfileMenuClose();
   };
 
-  const user = JSON.parse(localStorage.getItem('adminUser') || '{}');
+  const user = currentAdmin();
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'grey.50' }}>
@@ -120,7 +121,7 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
                 fontSize: '0.875rem'
               }}
             >
-              {user.nombre?.charAt(0)?.toUpperCase() || 'A'}
+              {(user.fullName || user.username)?.charAt(0)?.toUpperCase() || 'A'}
             </Avatar>
           </IconButton>
 
@@ -131,14 +132,14 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
           >
-            <MenuItem onClick={handleProfileMenuClose}>
+            <MenuItem onClick={() => { navigate('/change-password'); handleProfileMenuClose(); }}>
               <AccountCircle sx={{ mr: 1 }} />
-              Perfil
+              Cambiar contraseña
             </MenuItem>
-            <MenuItem onClick={handleProfileMenuClose}>
+            {user.role === 'superadmin' && <MenuItem onClick={() => { navigate('/settings'); handleProfileMenuClose(); }}>
               <Settings sx={{ mr: 1 }} />
               Configuración
-            </MenuItem>
+            </MenuItem>}
             <Divider />
             <MenuItem onClick={handleLogout}>
               <Logout sx={{ mr: 1 }} />
