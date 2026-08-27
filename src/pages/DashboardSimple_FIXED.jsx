@@ -1,224 +1,78 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Grid,
-  Card,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
-  Chip,
-  Divider,
-  Paper
-} from '@mui/material';
-import {
-  CheckCircle,
-  TrendingUp,
-  People,
-  Hotel,
-  Event
-} from '@mui/icons-material';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Grid, List, ListItem, ListItemText, Stack, Typography } from '@mui/material';
+import { Event, Hotel, People, PriceCheck, Refresh, WarningAmber } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/Layout/DashboardLayout';
+import apiService from '../services/apiService';
 
-const DashboardSimple = () => {
-  const [reservations, setReservations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [dataSource, setDataSource] = useState('backend');
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const token = localStorage.getItem('adminToken');
-        if (!token) throw new Error('Sesión no disponible');
-        
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/admin/reservations`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
-
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          const transformedData = result.data.slice(0, 10).map(reservation => ({
-              id: reservation.reservation_id,
-              guest: reservation.user_name || `Usuario ${reservation.user_id}`,
-              cabin: reservation.cabin_name || `Cabaña ${reservation.cabin_id}`,
-              checkin: new Date(reservation.start_date).toLocaleDateString('es-HN'),
-              checkout: new Date(reservation.end_date).toLocaleDateString('es-HN'),
-              status: reservation.status === 'confirmada' || reservation.status === 'confirmado' ? 'confirmed' : 'pending',
-              guests: reservation.personas || 1,
-              price: reservation.total_price || 0
-          }));
-          setReservations(transformedData);
-          setDataSource('backend');
-        }
-      } catch (error) {
-        console.error('No se pudo cargar el dashboard:', error.message);
-        setReservations([]);
-        setDataSource('error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-    
-    // Actualizar cada 30 segundos
-    const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const stats = {
-    totalReservations: reservations.length,
-    totalRevenue: reservations.reduce((sum, r) => sum + r.price, 0),
-    totalGuests: reservations.reduce((sum, r) => sum + r.guests, 0),
-    occupancyRate: null
-  };
-
-  return (
-    <DashboardLayout title="Dashboard">
-      <Box sx={{ p: 3 }}>
-        {/* Título con bandera de Honduras */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            🇭🇳 Dashboard de Reservas - Honduras
-          </Typography>
-          <Chip 
-            label={dataSource === 'backend' ? '🟢 Datos en vivo' : '🔴 Sin conexión'}
-            color={dataSource === 'backend' ? 'success' : 'error'}
-            size="small"
-          />
-        </Box>
-
-        {/* Métricas principales */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={3}>
-            <Card sx={{ textAlign: 'center', p: 2, bgcolor: '#1976d2', color: 'white' }}>
-              <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 'auto', mb: 1 }}>
-                <Event />
-              </Avatar>
-              <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                {stats.totalReservations}
-              </Typography>
-              <Typography>Reservas Activas</Typography>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Card sx={{ textAlign: 'center', p: 2, bgcolor: '#2e7d32', color: 'white' }}>
-              <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 'auto', mb: 1 }}>
-                <TrendingUp />
-              </Avatar>
-              <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                L{stats.totalRevenue.toLocaleString('es-HN')}
-              </Typography>
-              <Typography>Ingresos Totales</Typography>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Card sx={{ textAlign: 'center', p: 2, bgcolor: '#ed6c02', color: 'white' }}>
-              <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 'auto', mb: 1 }}>
-                <People />
-              </Avatar>
-              <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                {stats.totalGuests}
-              </Typography>
-              <Typography>Huéspedes Total</Typography>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Card sx={{ textAlign: 'center', p: 2, bgcolor: '#9c27b0', color: 'white' }}>
-              <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 'auto', mb: 1 }}>
-                <Hotel />
-              </Avatar>
-              <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                {stats.occupancyRate === null ? '—' : `${stats.occupancyRate}%`}
-              </Typography>
-              <Typography>Ocupación</Typography>
-            </Card>
-          </Grid>
-        </Grid>
-
-        {/* Lista de reservas */}
-        <Paper sx={{ p: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-          <Typography variant="h5" sx={{ mb: 3, fontWeight: 600, color: '#1976d2' }}>
-            🏨 Próximas Reservas
-          </Typography>
-
-          {loading ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h6" color="textSecondary">
-                Cargando reservas...
-              </Typography>
-            </Box>
-          ) : (
-            <List sx={{ p: 0 }}>
-              {reservations.map((reservation, index) => (
-                <React.Fragment key={reservation.id}>
-                  <ListItem sx={{ px: 0, py: 3 }}>
-                    <ListItemAvatar>
-                      <Avatar sx={{ 
-                        bgcolor: reservation.status === 'confirmed' ? '#2e7d32' : '#ed6c02',
-                        width: 56,
-                        height: 56
-                      }}>
-                        <CheckCircle sx={{ fontSize: 28 }} />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      sx={{ ml: 2 }}
-                      primary={
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                          <Typography variant="h6" sx={{ fontWeight: 700, color: '#1976d2' }}>
-                            {reservation.guest}
-                          </Typography>
-                          <Chip 
-                            label={reservation.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
-                            color={reservation.status === 'confirmed' ? 'success' : 'warning'}
-                            size="small"
-                            sx={{ fontWeight: 600 }}
-                          />
-                        </Box>
-                      }
-                      secondary={
-                        <Box>
-                          <Typography variant="body1" sx={{ mb: 0.5, fontWeight: 600 }}>
-                            🏠 {reservation.cabin}
-                          </Typography>
-                          <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
-                            📅 {reservation.checkin} → {reservation.checkout}
-                          </Typography>
-                          <Typography variant="body2" color="textSecondary">
-                            👥 {reservation.guests} huéspedes • 💰 L{reservation.price.toLocaleString('es-HN')}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                  {index < reservations.length - 1 && <Divider sx={{ my: 1 }} />}
-                </React.Fragment>
-              ))}
-            </List>
-          )}
-
-          {!loading && reservations.length === 0 && (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h6" color="textSecondary">
-                No hay reservas disponibles
-              </Typography>
-            </Box>
-          )}
-        </Paper>
-      </Box>
-    </DashboardLayout>
-  );
+const money = (value) => `L ${Number(value || 0).toLocaleString('es-HN', { minimumFractionDigits: 2 })}`;
+const statusLabels = {
+  pendiente_autorizacion: 'Esperando autorización', esperando_pago: 'Esperando pago',
+  pendiente_verificacion: 'Revisar comprobante', confirmada: 'Confirmada', confirmado: 'Confirmada',
+  rechazada: 'Rechazada', cancelada: 'Cancelada', cancelado: 'Cancelada'
 };
 
-export default DashboardSimple;
+function MetricCard({ icon, label, value, color }) {
+  return <Card sx={{ height: '100%', borderTop: `4px solid ${color}` }}><CardContent>
+    <Stack direction="row" justifyContent="space-between" alignItems="center"><Box><Typography color="text.secondary">{label}</Typography><Typography variant="h4" sx={{ mt: 1 }}>{value}</Typography></Box><Box sx={{ color }}>{icon}</Box></Stack>
+  </CardContent></Card>;
+}
+
+export default function DashboardSimple() {
+  const navigate = useNavigate();
+  const [metrics, setMetrics] = useState(null);
+  const [reservations, setReservations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const [dashboard, reservationResponse] = await Promise.all([apiService.getDashboardStats(), apiService.getReservations()]);
+      setMetrics(dashboard.data);
+      const list = Array.isArray(reservationResponse.data) ? reservationResponse.data : [];
+      setReservations(list.filter((item) => !['rechazada', 'cancelada', 'cancelado'].includes(item.status)).slice(0, 8));
+    } catch (requestError) { setError(requestError.message || 'No se pudo cargar el dashboard.'); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(); const timer = setInterval(load, 60000); return () => clearInterval(timer); }, [load]);
+  const alerts = metrics?.operationalAlerts || {};
+
+  return <DashboardLayout title="Dashboard">
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap', mb: 3 }}>
+      <Box><Typography variant="h4">Resumen operativo</Typography><Typography color="text.secondary">Información real de reservas, huéspedes y ocupación.</Typography></Box>
+      <Button startIcon={<Refresh />} variant="outlined" onClick={load} disabled={loading}>Actualizar</Button>
+    </Box>
+    {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+    {loading && !metrics ? <CircularProgress /> : <>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} lg={3}><MetricCard icon={<Event fontSize="large" />} label="Reservas registradas" value={metrics?.totalReservations || 0} color="#2563eb" /></Grid>
+        <Grid item xs={12} sm={6} lg={3}><MetricCard icon={<PriceCheck fontSize="large" />} label="Valor de reservas confirmadas" value={money(metrics?.totalRevenue)} color="#059669" /></Grid>
+        <Grid item xs={12} sm={6} lg={3}><MetricCard icon={<People fontSize="large" />} label="Huéspedes registrados" value={metrics?.totalUsers || 0} color="#7c3aed" /></Grid>
+        <Grid item xs={12} sm={6} lg={3}><MetricCard icon={<Hotel fontSize="large" />} label="Ocupación últimos 30 días" value={`${Number(metrics?.occupancyRate || 0).toFixed(1)} %`} color="#ea580c" /></Grid>
+      </Grid>
+
+      <Card sx={{ mb: 3 }}><CardContent>
+        <Typography variant="h6" sx={{ mb: 2 }}>Acciones pendientes</Typography>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} flexWrap="wrap" useFlexGap>
+          <Chip icon={<WarningAmber />} label={`${alerts.pendingAuthorization || 0} por autorizar`} color={alerts.pendingAuthorization ? 'warning' : 'default'} onClick={() => navigate('/reservations')} />
+          <Chip label={`${alerts.awaitingPayment || 0} esperando pago`} onClick={() => navigate('/reservations')} />
+          <Chip label={`${alerts.pendingReceiptReview || 0} comprobantes por revisar`} color={alerts.pendingReceiptReview ? 'error' : 'default'} onClick={() => navigate('/reservations')} />
+          <Chip label={`${alerts.checkInsToday || 0} entradas hoy`} color="success" variant="outlined" />
+          <Chip label={`${alerts.checkOutsToday || 0} salidas hoy`} color="info" variant="outlined" />
+          <Chip label={`${alerts.expiredPayments || 0} pagos vencidos`} color={alerts.expiredPayments ? 'error' : 'default'} />
+        </Stack>
+      </CardContent></Card>
+
+      <Card><CardContent>
+        <Stack direction="row" justifyContent="space-between" alignItems="center"><Typography variant="h6">Reservas recientes y próximas</Typography><Button onClick={() => navigate('/reservations')}>Ver todas</Button></Stack>
+        <List>{reservations.map((item) => <ListItem key={item.reservation_id} divider>
+          <ListItemText primary={`${item.confirmation_code || `VJ-${String(item.reservation_id).padStart(6, '0')}`} · ${item.user_name || 'Huésped'}`} secondary={`${item.cabin_name || 'Cabaña'} · ${item.start_date} al ${item.end_date} · ${money(item.total_price)}`} />
+          <Chip size="small" label={statusLabels[item.status] || item.status} color={item.status === 'pendiente_verificacion' ? 'error' : item.status === 'confirmada' ? 'success' : 'warning'} />
+        </ListItem>)}</List>
+        {!reservations.length && <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>No hay reservas para mostrar.</Typography>}
+      </CardContent></Card>
+    </>}
+  </DashboardLayout>;
+}

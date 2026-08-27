@@ -544,11 +544,31 @@ class ApiService {
 
   // Dashboard endpoints
   async getDashboardStats() {
-    return this.request('/admin/dashboard/stats');
+    return this.request('/admin/dashboard');
   }
 
-  async getDashboardRecentActivity() {
-    return this.request('/admin/dashboard/recent-activity');
+  async getRevenueReport(period = 'monthly', months = 12) {
+    return this.request(`/admin/dashboard/revenue?period=${encodeURIComponent(period)}&months=${encodeURIComponent(months)}`);
+  }
+
+  async getOccupancyReport(startDate, endDate) {
+    const query = new URLSearchParams();
+    if (startDate) query.set('start_date', startDate);
+    if (endDate) query.set('end_date', endDate);
+    return this.request(`/admin/dashboard/occupancy?${query.toString()}`);
+  }
+
+  async downloadReservationsReport(startDate, endDate) {
+    const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+    const query = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    const response = await fetch(`${API_BASE_URL}/admin/dashboard/export?${query.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) {
+      let data = {}; try { data = await response.json(); } catch { data = {}; }
+      throw new Error(data.message || 'No se pudo generar el reporte.');
+    }
+    return response.blob();
   }
 
   // Activities endpoints

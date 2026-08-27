@@ -52,4 +52,16 @@ describe('acciones administrativas de reservas', () => {
     await apiService.testWhatsAppAdmin(3);
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/whatsapp-admins/3/test'), expect.objectContaining({ method: 'POST' }));
   });
+
+  it('consulta las métricas reales del dashboard', async () => {
+    const { default: apiService } = await import('./apiService');
+    await apiService.getDashboardStats();
+    expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/\/admin\/dashboard$/), expect.any(Object));
+  });
+
+  it('consulta ocupación usando un rango explícito', async () => {
+    const { default: apiService } = await import('./apiService');
+    await apiService.getOccupancyReport('2026-01-01', '2026-12-31');
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/dashboard/occupancy?start_date=2026-01-01&end_date=2026-12-31'), expect.any(Object));
+  });
 });
