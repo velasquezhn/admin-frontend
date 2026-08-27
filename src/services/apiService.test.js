@@ -64,4 +64,10 @@ describe('acciones administrativas de reservas', () => {
     await apiService.getOccupancyReport('2026-01-01', '2026-12-31');
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/dashboard/occupancy?start_date=2026-01-01&end_date=2026-12-31'), expect.any(Object));
   });
+
+  it('crea una copia de seguridad desde el panel', async () => {
+    const { default: apiService } = await import('./apiService');
+    await apiService.createBackup();
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/backup/create'), expect.objectContaining({ method: 'POST' }));
+  });
 });

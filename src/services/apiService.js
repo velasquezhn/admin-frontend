@@ -734,6 +734,27 @@ class ApiService {
     return this.request(`/admin/notifications/${id}/retry`, { method: 'POST' });
   }
 
+  async getBackupStatus() {
+    return this.request('/admin/backup/status');
+  }
+
+  async getBackups() {
+    return this.request('/admin/backup/list');
+  }
+
+  async createBackup() {
+    return this.request('/admin/backup/create', { method: 'POST' });
+  }
+
+  async downloadBackup(filename) {
+    const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+    const response = await fetch(`${API_BASE_URL}/admin/backup/download/${encodeURIComponent(filename)}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) throw new Error('No se pudo descargar la copia de seguridad.');
+    return response.blob();
+  }
+
   // Conversation States endpoints
   async getConversationStates() {
     return this.request('/admin/conversation-states');

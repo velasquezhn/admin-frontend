@@ -26,6 +26,7 @@ import {
   LocalActivity as ActivitiesIcon,
   FactCheck as AuditIcon,
   NotificationsActive as NotificationsIcon,
+  Backup as BackupIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { currentAdmin } from '../../utils/adminRoles';
@@ -103,6 +104,13 @@ const menuItems = [
     icon: <TrendingUpIcon />,
     path: '/reports',
     color: '#ef4444'
+  },
+  {
+    text: 'Copias de seguridad',
+    icon: <BackupIcon />,
+    path: '/backups',
+    color: '#0284c7',
+    roles: ['superadmin']
   },
   {
     text: 'Mensajes pendientes',
