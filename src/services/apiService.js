@@ -497,6 +497,20 @@ class ApiService {
     });
   }
 
+  async approveReservation(id) {
+    return this.request(`/admin/reservations/${id}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({})
+    });
+  }
+
+  async rejectReservation(id, reason) {
+    return this.request(`/admin/reservations/${id}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason })
+    });
+  }
+
   async deleteReservation(id) {
     return this.request(`/admin/reservations/${id}`, {
       method: 'DELETE',
@@ -648,6 +662,22 @@ class ApiService {
         return { total_price: 0 };
       }
     }
+  }
+
+  async getWhatsAppAdmins() {
+    return this.request('/admin/whatsapp-admins');
+  }
+
+  async createWhatsAppAdmin(data) {
+    return this.request('/admin/whatsapp-admins', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async updateWhatsAppAdmin(id, data) {
+    return this.request(`/admin/whatsapp-admins/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
+  async deleteWhatsAppAdmin(id) {
+    return this.request(`/admin/whatsapp-admins/${id}`, { method: 'DELETE' });
   }
 
   // Conversation States endpoints

@@ -52,7 +52,9 @@ import {
   ExpandLess,
   Phone,
   Group,
-  LocalAtm
+  LocalAtm,
+  ReceiptLong as ReceiptIcon,
+  Close as RejectIcon
 } from '@mui/icons-material';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import apiService from '../services/apiService';
@@ -277,16 +279,37 @@ const ReservationsPageSimplePro = () => {
   };
 
   const handleConfirm = async (id) => {
+    if (!window.confirm('¿Confirmar esta reserva y notificar al huésped por WhatsApp?')) return;
     try {
-      const reservation = reservations.find(r => r.reservation_id === id);
-      if (reservation) {
-        await apiService.updateReservation(id, { ...reservation, status: 'confirmada' });
-        showSnackbar('Reserva confirmada exitosamente', 'success');
-        fetchReservations();
-      }
+      const result = await apiService.approveReservation(id);
+      showSnackbar(
+        result.notificationSent
+          ? 'Reserva confirmada y huésped notificado por WhatsApp'
+          : 'Reserva confirmada; la notificación de WhatsApp quedó pendiente',
+        result.notificationSent ? 'success' : 'warning'
+      );
+      fetchReservations();
     } catch (error) {
       console.error('Error confirming reservation:', error);
-      showSnackbar('Error al confirmar la reserva', 'error');
+      showSnackbar('No se pudo confirmar. Verifica el comprobante y la disponibilidad.', 'error');
+    }
+  };
+
+  const handleReject = async (id) => {
+    const reason = window.prompt('Motivo del rechazo que recibirá el huésped:');
+    if (!reason) return;
+    try {
+      const result = await apiService.rejectReservation(id, reason.trim());
+      showSnackbar(
+        result.notificationSent
+          ? 'Solicitud rechazada y huésped notificado'
+          : 'Solicitud rechazada; la notificación quedó pendiente',
+        result.notificationSent ? 'success' : 'warning'
+      );
+      fetchReservations();
+    } catch (error) {
+      console.error('Error rejecting reservation:', error);
+      showSnackbar('No se pudo rechazar la solicitud', 'error');
     }
   };
 
@@ -347,6 +370,7 @@ const ReservationsPageSimplePro = () => {
       case 'confirmada': return 'success';
       case 'pendiente': return 'warning';
       case 'cancelada': return 'error';
+      case 'rechazada': return 'error';
       default: return 'default';
     }
   };
@@ -635,6 +659,9 @@ const ReservationsPageSimplePro = () => {
                             <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
                               #{reservation.reservation_id}
                             </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {reservation.confirmation_code || `VJ-${String(reservation.reservation_id).padStart(6, '0')}`}
+                            </Typography>
                           </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -709,16 +736,44 @@ const ReservationsPageSimplePro = () => {
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                               {reservation.status === 'pendiente' && (
-                                <Tooltip title="Confirmar reserva">
+                                <Tooltip title={reservation.comprobante_nombre_archivo ? 'Aprobar y notificar' : 'Falta comprobante'}>
+                                  <span>
                                   <IconButton
                                     size="small"
                                     onClick={() => handleConfirm(reservation.reservation_id)}
+                                    disabled={!reservation.comprobante_nombre_archivo}
                                     sx={{ 
                                       color: 'success.main',
                                       '&:hover': { backgroundColor: 'rgba(76, 175, 80, 0.1)' }
                                     }}
                                   >
                                     <CheckIcon fontSize="small" />
+                                  </IconButton>
+                                  </span>
+                                </Tooltip>
+                              )}
+                              {reservation.status === 'pendiente' && (
+                                <Tooltip title="Rechazar y notificar">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleReject(reservation.reservation_id)}
+                                    sx={{ color: 'error.main' }}
+                                  >
+                                    <RejectIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                              {reservation.comprobante_nombre_archivo && (
+                                <Tooltip title="Abrir comprobante">
+                                  <IconButton
+                                    size="small"
+                                    component="a"
+                                    href={`${process.env.REACT_APP_API_URL}${reservation.comprobante_nombre_archivo}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{ color: 'info.main' }}
+                                  >
+                                    <ReceiptIcon fontSize="small" />
                                   </IconButton>
                                 </Tooltip>
                               )}
@@ -863,6 +918,7 @@ const ReservationsPageSimplePro = () => {
                   <MenuItem value="pendiente">🟡 Pendiente</MenuItem>
                   <MenuItem value="confirmada">🟢 Confirmada</MenuItem>
                   <MenuItem value="cancelada">🔴 Cancelada</MenuItem>
+                  <MenuItem value="rechazada">🔴 Rechazada</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
