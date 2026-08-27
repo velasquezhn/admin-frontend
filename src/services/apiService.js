@@ -680,6 +680,10 @@ class ApiService {
     return this.request(`/admin/whatsapp-admins/${id}`, { method: 'DELETE' });
   }
 
+  async testWhatsAppAdmin(id) {
+    return this.request(`/admin/whatsapp-admins/${id}/test`, { method: 'POST' });
+  }
+
   // Conversation States endpoints
   async getConversationStates() {
     return this.request('/admin/conversation-states');

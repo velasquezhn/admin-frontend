@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Stack, Switch, TextField, Typography } from '@mui/material';
-import { Add, Delete, Edit, WhatsApp } from '@mui/icons-material';
+import { Add, Delete, Edit, Send, WhatsApp } from '@mui/icons-material';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import apiService from '../services/apiService';
 
@@ -33,12 +33,25 @@ const SettingsPageSimple = () => {
   };
   const save = async () => {
     try {
-      if (editing) await apiService.updateWhatsAppAdmin(editing.id, form);
-      else await apiService.createWhatsAppAdmin(form);
+      let response;
+      if (editing) response = await apiService.updateWhatsAppAdmin(editing.id, form);
+      else response = await apiService.createWhatsAppAdmin(form);
       setDialogOpen(false);
-      setMessage({ severity: 'success', text: 'Administrador de WhatsApp guardado.' });
+      const delivery = response?.whatsapp;
+      setMessage(delivery && !delivery.sent
+        ? { severity: 'warning', text: 'Número guardado, pero Meta no permitió enviar la prueba. Desde ese teléfono envía /admin y luego pulsa “Enviar prueba”.' }
+        : { severity: 'success', text: delivery ? `Administrador conectado. Reservas pendientes reenviadas: ${delivery.pendingSent || 0}.` : 'Administrador de WhatsApp guardado.' });
       await load();
     } catch { setMessage({ severity: 'error', text: 'No se pudo guardar. Revisa el número y que no esté duplicado.' }); }
+  };
+  const testAdmin = async (admin) => {
+    try {
+      const response = await apiService.testWhatsAppAdmin(admin.id);
+      const delivery = response.whatsapp || {};
+      setMessage(delivery.sent
+        ? { severity: 'success', text: `Mensaje de prueba enviado. Reservas pendientes reenviadas: ${delivery.pendingSent || 0}.` }
+        : { severity: 'warning', text: 'Meta bloqueó la prueba. Envía /admin desde ese teléfono al WhatsApp de Villas Julie y vuelve a intentarlo.' });
+    } catch { setMessage({ severity: 'error', text: 'No se pudo ejecutar la prueba de WhatsApp.' }); }
   };
   const remove = async (admin) => {
     if (!window.confirm(`¿Quitar a ${admin.display_name || admin.phone_number} de las aprobaciones por WhatsApp?`)) return;
@@ -66,6 +79,7 @@ const SettingsPageSimple = () => {
               <Stack key={admin.id} direction="row" alignItems="center" spacing={2} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                 <Box sx={{ flex: 1 }}><Typography fontWeight={700}>{admin.display_name || 'Administrador'}</Typography><Typography color="text.secondary">+{admin.phone_number}</Typography></Box>
                 <Chip label={admin.is_active ? 'Activo' : 'Inactivo'} color={admin.is_active ? 'success' : 'default'} size="small" />
+                <IconButton aria-label="Enviar prueba" color="success" disabled={!admin.is_active} onClick={() => testAdmin(admin)}><Send /></IconButton>
                 <IconButton aria-label="Editar" onClick={() => openEdit(admin)}><Edit /></IconButton>
                 <IconButton aria-label="Eliminar" color="error" onClick={() => remove(admin)}><Delete /></IconButton>
               </Stack>

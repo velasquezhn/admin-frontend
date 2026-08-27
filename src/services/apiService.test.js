@@ -34,4 +34,10 @@ describe('acciones administrativas de reservas', () => {
       method: 'POST', body: JSON.stringify({ display_name: 'Carlos', phone_number: '50499990000' })
     }));
   });
+
+  it('envía una prueba al administrador de WhatsApp', async () => {
+    const { default: apiService } = await import('./apiService');
+    await apiService.testWhatsAppAdmin(3);
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/whatsapp-admins/3/test'), expect.objectContaining({ method: 'POST' }));
+  });
 });
