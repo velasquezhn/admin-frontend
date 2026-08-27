@@ -22,6 +22,11 @@ const PrivateRoute = ({ children, allowedRoles = ['admin', 'superadmin'], allowP
           headers: { Authorization: `Bearer ${token}` },
         });
         setIsAuthenticated(response.ok);
+        if (response.ok) {
+          const payload = await response.json();
+          const stored = currentAdmin();
+          localStorage.setItem('adminUser', JSON.stringify({ ...stored, ...(payload.data?.user || {}) }));
+        }
         if (!response.ok) {
           localStorage.removeItem('adminToken');
           localStorage.removeItem('adminUser');
