@@ -36,8 +36,6 @@ import cabinTypesService from '../services/cabinTypesService';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 
 const CabinTypesPage = () => {
-  console.log('🎯 CabinTypesPage component loaded');
-  
   const [cabinTypes, setCabinTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -53,7 +51,6 @@ const CabinTypesPage = () => {
   const [menuPreview, setMenuPreview] = useState(null);
 
   useEffect(() => {
-    console.log('🚀 useEffect triggered, calling loadCabinTypes');
     loadCabinTypes();
   }, []);
 
@@ -61,7 +58,6 @@ const CabinTypesPage = () => {
     try {
       setLoading(true);
       const response = await cabinTypesService.getAllCabinTypes();
-      console.log('API Response:', response); // Debug
       setCabinTypes(response.data || []);
       setError(null);
     } catch (err) {
@@ -104,7 +100,7 @@ const CabinTypesPage = () => {
         habitaciones: parseInt(editForm.habitaciones),
         baños: parseInt(editForm.baños),
         precio_noche: parseFloat(editForm.precio_noche),
-        fotos: editForm.fotos.split('\n').filter(url => url.trim())
+        fotos: editForm.fotos.split('\n').map(url => url.trim()).filter(Boolean)
       };
 
       await cabinTypesService.updateCabinType(editingType.type_key, updateData);
@@ -332,6 +328,7 @@ const CabinTypesPage = () => {
                   rows={4}
                   value={editForm.fotos || ''}
                   onChange={(e) => setEditForm({ ...editForm, fotos: e.target.value })}
+                  helperText="Usa enlaces públicos HTTPS en JPG, PNG o WEBP. WhatsApp mostrará hasta 4 fotos por cabaña."
                 />
               </Grid>
               
