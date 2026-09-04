@@ -42,7 +42,6 @@ import activitiesService from '../services/activitiesService';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 
 const ActivitiesPage = () => {
-  console.log('🎯 ActivitiesPage component loaded');
   
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,57 +82,33 @@ const ActivitiesPage = () => {
   const [selectedActivityPhotos, setSelectedActivityPhotos] = useState(null);
 
   useEffect(() => {
-    console.log('🚀 useEffect triggered, calling loadActivities');
     loadActivities();
   }, []);
 
   const loadActivities = async () => {
-    console.log('� [ACTIVITIES-DEBUG] ==================== START LOADING ====================');
-    console.log('🔄 [ACTIVITIES-DEBUG] Starting to load activities...');
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('🔄 [ACTIVITIES-DEBUG] Calling activitiesService.getAllActivities()');
       const data = await activitiesService.getAllActivities();
-      console.log('✅ [ACTIVITIES-DEBUG] Raw data received from API:', data);
-      console.log('✅ [ACTIVITIES-DEBUG] Data type:', typeof data, 'Is Array:', Array.isArray(data));
-      console.log('✅ [ACTIVITIES-DEBUG] Data keys:', data ? Object.keys(data) : 'null');
-      
-      // Verificar token
-      const token = localStorage.getItem('adminToken');
-      console.log('🔑 [ACTIVITIES-DEBUG] Token exists:', !!token);
       
       if (Array.isArray(data)) {
         setActivities(data);
-        console.log('✅ [ACTIVITIES-DEBUG] Activities set in state (direct array):', data.length, 'items');
       } else if (data && data.success && data.data && Array.isArray(data.data)) {
         setActivities(data.data);
-        console.log('✅ [ACTIVITIES-DEBUG] Activities set from data.data:', data.data.length, 'items');
       } else if (data && data.activities && Array.isArray(data.activities)) {
         setActivities(data.activities);
-        console.log('✅ [ACTIVITIES-DEBUG] Activities set from data.activities:', data.activities.length, 'items');
       } else {
-        console.warn('⚠️ [ACTIVITIES-DEBUG] Data is not in expected format, setting empty array');
-        console.warn('⚠️ [ACTIVITIES-DEBUG] Data structure:', JSON.stringify(data, null, 2));
         setActivities([]);
       }
     } catch (err) {
-      console.error('❌ [ACTIVITIES-DEBUG] Error loading activities:', err);
-      console.error('❌ [ACTIVITIES-DEBUG] Error details:', err.message);
-      console.error('❌ [ACTIVITIES-DEBUG] Error stack:', err.stack);
       setError('Error al cargar las actividades: ' + err.message);
       setActivities([]);
     } finally {
       setLoading(false);
-      console.log('📥 [ACTIVITIES-DEBUG] Loading process completed');
-      console.log('📥 [ACTIVITIES-DEBUG] Final state - Loading:', false, 'Activities count:', activities.length);
-      console.log('🔄 [ACTIVITIES-DEBUG] ==================== END LOADING ====================');
     }
   };
 
   const handleEdit = (activity) => {
-    console.log('✏️ Editing activity:', activity);
     setEditingActivity(activity);
     setEditForm({
       nombre: activity.nombre || '',
@@ -241,9 +216,7 @@ const ActivitiesPage = () => {
 
   const handleBotMenuPreview = async () => {
     try {
-      console.log('🔄 Generating bot menu preview...');
       const menuData = await activitiesService.getMenuPreview();
-      console.log('✅ Bot menu data:', menuData);
       
       setMenuPreview({
         ...menuData.data,
@@ -252,7 +225,6 @@ const ActivitiesPage = () => {
       });
       setPreviewDialog(true);
     } catch (error) {
-      console.error('❌ Error generating bot menu preview:', error);
       setError('Error al generar vista previa del menú: ' + error.message);
     }
   };

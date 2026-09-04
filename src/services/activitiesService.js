@@ -4,9 +4,7 @@ const activitiesService = {
   // Obtener todas las actividades
   getAllActivities: async () => {
     try {
-      console.log('🔄 Fetching activities from:', `${API_BASE_URL}/admin/activities`);
       const token = localStorage.getItem('adminToken');
-      console.log('🔑 Token exists:', !!token);
       
       const response = await fetch(`${API_BASE_URL}/admin/activities`, {
         headers: {
@@ -15,15 +13,11 @@ const activitiesService = {
         }
       });
       
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response ok:', response.ok);
-      
       if (!response.ok) {
         throw new Error(`Error: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log('✅ Activities response data:', data);
       return data;
     } catch (error) {
       console.error('❌ Error fetching activities:', error);
@@ -34,7 +28,6 @@ const activitiesService = {
   // Obtener una actividad específica
   getActivity: async (activityKey) => {
     try {
-      console.log(`🔄 Fetching activity: ${activityKey}`);
       const token = localStorage.getItem('adminToken');
       
       const response = await fetch(`${API_BASE_URL}/admin/activities/${activityKey}`, {
@@ -49,7 +42,6 @@ const activitiesService = {
       }
       
       const data = await response.json();
-      console.log('✅ Activity fetched successfully:', data);
       return data;
     } catch (error) {
       console.error('❌ Error fetching activity:', error);
@@ -60,7 +52,6 @@ const activitiesService = {
   // Actualizar actividad
   updateActivity: async (activityKey, updateData) => {
     try {
-      console.log(`🔄 Updating activity: ${activityKey}`, updateData);
       const token = localStorage.getItem('adminToken');
       
       const response = await fetch(`${API_BASE_URL}/admin/activities/${activityKey}`, {
@@ -77,7 +68,6 @@ const activitiesService = {
       }
       
       const data = await response.json();
-      console.log('✅ Activity updated successfully:', data);
       return data;
     } catch (error) {
       console.error('❌ Error updating activity:', error);
@@ -88,7 +78,6 @@ const activitiesService = {
   // Cambiar estado activo/inactivo
   toggleActivity: async (activityKey, activo) => {
     try {
-      console.log(`🔄 Toggling activity: ${activityKey} to ${activo}`);
       const token = localStorage.getItem('adminToken');
       
       const response = await fetch(`${API_BASE_URL}/admin/activities/${activityKey}/toggle`, {
@@ -105,7 +94,6 @@ const activitiesService = {
       }
       
       const data = await response.json();
-      console.log('✅ Activity toggled successfully:', data);
       return data;
     } catch (error) {
       console.error('❌ Error toggling activity:', error);
@@ -116,7 +104,6 @@ const activitiesService = {
   // Crear nueva actividad
   createActivity: async (activityData) => {
     try {
-      console.log('🔄 Creating new activity:', activityData);
       const token = localStorage.getItem('adminToken');
       
       const response = await fetch(`${API_BASE_URL}/admin/activities`, {
@@ -133,7 +120,6 @@ const activitiesService = {
       }
       
       const data = await response.json();
-      console.log('✅ Activity created successfully:', data);
       return data;
     } catch (error) {
       console.error('❌ Error creating activity:', error);
@@ -144,7 +130,6 @@ const activitiesService = {
   // Obtener vista previa del menú dinámico para el bot
   getMenuPreview: async () => {
     try {
-      console.log('🔄 Fetching activities menu preview...');
       const token = localStorage.getItem('adminToken');
       
       const response = await fetch(`${API_BASE_URL}/admin/activities/menu/preview`, {
@@ -159,7 +144,6 @@ const activitiesService = {
       }
       
       const data = await response.json();
-      console.log('✅ Menu preview fetched successfully:', data);
       return data;
     } catch (error) {
       console.error('❌ Error fetching menu preview:', error);

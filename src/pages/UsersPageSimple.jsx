@@ -135,16 +135,11 @@ const UsersPageSimple = () => {
   const applyFilters = () => {
     let filtered = [...users];
 
-    console.log('[DEBUG] Aplicando filtros de usuarios:', filters);
-    console.log('[DEBUG] Total usuarios:', filtered.length);
-
     // Filtro por estado
     if (filters.estado) {
       filtered = filtered.filter(user => {
         const isActive = user.is_active;
-        const matchesFilter = (filters.estado === 'activo') ? isActive : !isActive;
-        console.log(`[DEBUG] Usuario ${user.name}: activo=${isActive}, filtro=${filters.estado}, coincide=${matchesFilter}`);
-        return matchesFilter;
+        return (filters.estado === 'activo') ? isActive : !isActive;
       });
     }
 
@@ -175,7 +170,6 @@ const UsersPageSimple = () => {
       });
     }
 
-    console.log('[DEBUG] Usuarios filtrados:', filtered.length);
     setFilteredUsers(filtered);
   };
 

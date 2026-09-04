@@ -61,9 +61,7 @@ const CabinsPageSimple = () => {
   const fetchCabins = async () => {
     try {
       setLoading(true);
-      console.log('[DEBUG] Fetching cabins...');
       const data = await apiService.getCabins();
-      console.log('[DEBUG] Cabins data received:', data);
       setCabins(data || []);
       setError(null);
     } catch (err) {
@@ -75,23 +73,14 @@ const CabinsPageSimple = () => {
   };
 
   const filterCabins = () => {
-    console.log('[DEBUG] Filtros - Tipo seleccionado:', filterType);
-    console.log('[DEBUG] Filtros - Cabañas disponibles:', cabins);
-    
     if (filterType === 'all') {
       setFilteredCabins(cabins);
     } else {
       const filtered = cabins.filter(cabin => {
         const cabinName = cabin.name || cabin.nombre || '';
         const cabinType = getCabinType(cabinName);
-        const matches = cabinType === filterType;
-        
-        console.log(`[DEBUG] Cabaña: "${cabinName}" -> Tipo: "${cabinType}" -> Coincide con "${filterType}": ${matches}`);
-        
-        return matches;
+        return cabinType === filterType;
       });
-      
-      console.log('[DEBUG] Cabañas filtradas:', filtered);
       setFilteredCabins(filtered);
     }
   };

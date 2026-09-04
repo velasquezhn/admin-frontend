@@ -115,13 +115,10 @@ const CalendarPageImproved = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log('[DEBUG] Fetching calendar data for year:', year, 'month:', month);
       const response = await apiService.getCalendarOccupancy(year, month);
-      console.log('[DEBUG] Calendar response received:', response);
       
       // Access data from the response structure
       const data = response.data || response;
-      console.log('[DEBUG] Extracted data:', data);
       
       setCabanas(data.cabanas || []);
       
@@ -162,10 +159,6 @@ const CalendarPageImproved = () => {
   };
 
   const applyFilters = () => {
-    console.log('[DEBUG] Aplicando filtros:', filters);
-    console.log('[DEBUG] Cabañas disponibles:', cabanas);
-    console.log('[DEBUG] Reservas disponibles:', reservas);
-    
     let filtered = [...cabanas];
     
     // Filtro por tipo de cabaña
@@ -177,7 +170,6 @@ const CalendarPageImproved = () => {
         const tipoCabanaLower = tipoCabana.toLowerCase();
         
         const coincide = tipoCabanaLower === tipoFiltro;
-        console.log(`[DEBUG] Cabaña "${cabana.nombre}": tipo detectado "${tipoCabana}", filtro "${filters.tipoCabana}", coincide: ${coincide}`);
         return coincide;
       });
     }
@@ -201,7 +193,6 @@ const CalendarPageImproved = () => {
           return coincideId && coincideEstado;
         });
         
-        console.log(`[DEBUG] Cabaña ${cabana.nombre}: tiene reserva con estado ${filters.estado}: ${tieneReservaConEstado || tieneOcupacionConEstado}`);
         return tieneReservaConEstado || tieneOcupacionConEstado;
       });
     }
@@ -212,12 +203,10 @@ const CalendarPageImproved = () => {
         const capacidadCabana = parseInt(cabana.capacidad) || 0;
         const capacidadMinima = parseInt(filters.capacidad);
         const cumpleCapacidad = capacidadCabana >= capacidadMinima;
-        console.log(`[DEBUG] Cabaña ${cabana.nombre}: capacidad ${capacidadCabana}, mínima ${capacidadMinima}, cumple: ${cumpleCapacidad}`);
         return cumpleCapacidad;
       });
     }
     
-    console.log('[DEBUG] Cabañas filtradas:', filtered);
     setFilteredCabanas(filtered);
   };
 

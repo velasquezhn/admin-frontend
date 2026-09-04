@@ -34,6 +34,7 @@ import {
 } from '@mui/icons-material';
 import cabinTypesService from '../services/cabinTypesService';
 import DashboardLayout from '../components/Layout/DashboardLayout';
+import { cabinTypeToForm, emptyCabinTypeForm, normalizeCabinTypeForm, validateCabinTypeForm } from '../utils/cabinTypeForm';
 
 const CabinTypesPage = () => {
   const [cabinTypes, setCabinTypes] = useState([]);
@@ -45,6 +46,7 @@ const CabinTypesPage = () => {
   const [editDialog, setEditDialog] = useState(false);
   const [editingType, setEditingType] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
   
   // Estados para vista previa
   const [previewDialog, setPreviewDialog] = useState(false);
@@ -80,35 +82,47 @@ const CabinTypesPage = () => {
 
   const handleEdit = (cabinType) => {
     setEditingType(cabinType);
-    setEditForm({
-      nombre: cabinType.nombre,
-      capacidad: cabinType.capacidad,
-      habitaciones: cabinType.habitaciones,
-      baños: cabinType.baños,
-      precio_noche: cabinType.precio_noche,
-      descripcion: cabinType.descripcion,
-      fotos: Array.isArray(cabinType.fotos) ? cabinType.fotos.join('\n') : cabinType.fotos
-    });
+    setEditForm(cabinTypeToForm(cabinType));
     setEditDialog(true);
   };
 
-  const handleSaveEdit = async () => {
-    try {
-      const updateData = {
-        ...editForm,
-        capacidad: parseInt(editForm.capacidad),
-        habitaciones: parseInt(editForm.habitaciones),
-        baños: parseInt(editForm.baños),
-        precio_noche: parseFloat(editForm.precio_noche),
-        fotos: editForm.fotos.split('\n').map(url => url.trim()).filter(Boolean)
-      };
+  const handleCreate = () => {
+    setEditingType(null);
+    setEditForm({ ...emptyCabinTypeForm });
+    setEditDialog(true);
+  };
 
-      await cabinTypesService.updateCabinType(editingType.type_key, updateData);
-      setSuccess('Tipo de cabaña actualizado exitosamente');
+  const closeEditDialog = () => {
+    if (saving) return;
+    setEditDialog(false);
+    setEditingType(null);
+  };
+
+  const handleSaveEdit = async () => {
+    const creating = !editingType;
+    const validationError = validateCabinTypeForm(editForm, { creating });
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    try {
+      setSaving(true);
+      const updateData = normalizeCabinTypeForm(editForm);
+
+      if (creating) {
+        await cabinTypesService.createCabinType(updateData);
+        setSuccess('Tipo de cabaña creado exitosamente');
+      } else {
+        await cabinTypesService.updateCabinType(editingType.type_key, updateData);
+        setSuccess('Tipo de cabaña actualizado exitosamente');
+      }
       setEditDialog(false);
-      loadCabinTypes();
+      setEditingType(null);
+      await loadCabinTypes();
     } catch (err) {
-      setError('Error al actualizar: ' + err.message);
+      setError(`Error al ${creating ? 'crear' : 'actualizar'}: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -157,7 +171,7 @@ const CabinTypesPage = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => {/* TODO: Implementar crear nuevo */}}
+            onClick={handleCreate}
           >
             Nuevo Tipo
           </Button>
@@ -263,16 +277,39 @@ const CabinTypesPage = () => {
       </TableContainer>
 
       {/* Diálogo de edición */}
-      <Dialog open={editDialog} onClose={() => setEditDialog(false)} maxWidth="md" fullWidth>
+      <Dialog open={editDialog} onClose={closeEditDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          Editar {editingType?.nombre}
+          {editingType ? `Editar ${editingType.nombre}` : 'Nuevo tipo de cabaña'}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <Grid container spacing={2}>
+              {!editingType && <>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    required
+                    label="Clave interna"
+                    value={editForm.type_key || ''}
+                    onChange={(e) => setEditForm({ ...editForm, type_key: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
+                    helperText="Solo letras minúsculas, números y guion bajo. No podrá cambiarse después."
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    required
+                    label="Tipo"
+                    value={editForm.tipo || ''}
+                    onChange={(e) => setEditForm({ ...editForm, tipo: e.target.value })}
+                    helperText="Ejemplo: cabana"
+                  />
+                </Grid>
+              </>}
               <Grid item xs={12}>
                 <TextField
                   fullWidth
+                  required
                   label="Nombre"
                   value={editForm.nombre || ''}
                   onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
@@ -282,6 +319,7 @@ const CabinTypesPage = () => {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
+                  required
                   label="Capacidad"
                   type="number"
                   value={editForm.capacidad || ''}
@@ -312,6 +350,7 @@ const CabinTypesPage = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
+                  required
                   label="Precio por Noche"
                   type="number"
                   step="0.01"
@@ -346,8 +385,10 @@ const CabinTypesPage = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialog(false)}>Cancelar</Button>
-          <Button onClick={handleSaveEdit} variant="contained">Guardar</Button>
+          <Button onClick={closeEditDialog} disabled={saving}>Cancelar</Button>
+          <Button onClick={handleSaveEdit} variant="contained" disabled={saving}>
+            {saving ? 'Guardando…' : (editingType ? 'Guardar' : 'Crear tipo')}
+          </Button>
         </DialogActions>
       </Dialog>
 

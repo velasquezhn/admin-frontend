@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, TextField, Typography, Container } from '@mui/material';
+import { Alert, Box, Button, TextField, Typography, Container } from '@mui/material';
+
+const appEnvironment = process.env.REACT_APP_ENV || 'qa';
 
 const LoginPage = () => {
   const [username, setUsername] = useState('');
@@ -40,6 +42,11 @@ const LoginPage = () => {
     <Container maxWidth="xs">
       <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography component="h1" variant="h5">Iniciar Sesión</Typography>
+        {appEnvironment !== 'production' && (
+          <Alert severity="warning" sx={{ width: '100%', mt: 2 }}>
+            Ambiente de pruebas QA/UAT. Los datos pueden cambiar durante la validación.
+          </Alert>
+        )}
         <Box component="form" onSubmit={handleLogin} sx={{ mt: 1 }}>
           <TextField
             margin="normal"

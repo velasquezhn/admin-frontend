@@ -36,6 +36,7 @@ La compilación de producción falla deliberadamente si falta `VITE_API_URL`.
 - Build output directory: `dist`.
 - Production branch: `master`.
 - Variable: `VITE_API_URL=https://DOMINIO-DEL-BACKEND`.
+- Variable: `VITE_APP_ENV=qa` para este ambiente de pruebas. En el despliegue definitivo debe cambiarse explícitamente a `production`.
 
 El archivo `public/_redirects` permite que React Router funcione al recargar rutas internas. Cloudflare proporciona HTTPS y un subdominio `*.pages.dev` sin comprar dominio.
 

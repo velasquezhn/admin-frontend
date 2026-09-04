@@ -15,6 +15,7 @@ import {
   MenuItem,
   Badge,
   Tooltip,
+  Chip,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -29,6 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import { currentAdmin } from '../../utils/adminRoles';
 
 const drawerWidth = 280;
+const appEnvironment = process.env.REACT_APP_ENV || 'qa';
 
 const DashboardLayout = ({ children, title = 'Dashboard' }) => {
   const theme = useTheme();
@@ -98,6 +100,15 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
           >
             {title}
           </Typography>
+
+          {appEnvironment !== 'production' && (
+            <Chip
+              label="AMBIENTE DE PRUEBAS"
+              color="warning"
+              size="small"
+              sx={{ mr: 2, fontWeight: 700 }}
+            />
+          )}
 
           {/* Notifications */}
           <Tooltip title="Notificaciones">

@@ -1,154 +1,52 @@
-// services/cabinTypesService.js
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
+async function request(path, options = {}) {
+  const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.message || `La solicitud falló (${response.status})`);
+  return payload;
+}
+
 class CabinTypesService {
-  
-  /**
-   * Obtener todos los tipos de cabañas
-   */
-  async getAllCabinTypes() {
-    try {
-      console.log('Fetching from:', `${API_BASE_URL}/admin/cabin-types`);
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/admin/cabin-types`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      console.log('Response status:', response.status);
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      console.log('Response data:', data);
-      return data;
-    } catch (error) {
-      console.error('Error fetching cabin types:', error);
-      throw error;
-    }
+  getAllCabinTypes() {
+    return request('/admin/cabin-types');
   }
 
-  /**
-   * Obtener un tipo específico por clave
-   */
-  async getCabinTypeByKey(typeKey) {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/admin/cabin-types/${typeKey}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching cabin type:', error);
-      throw error;
-    }
+  getCabinTypeByKey(typeKey) {
+    return request(`/admin/cabin-types/${encodeURIComponent(typeKey)}`);
   }
 
-  /**
-   * Actualizar un tipo de cabaña
-   */
-  async updateCabinType(typeKey, data) {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/admin/cabin-types/${typeKey}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating cabin type:', error);
-      throw error;
-    }
+  updateCabinType(typeKey, data) {
+    return request(`/admin/cabin-types/${encodeURIComponent(typeKey)}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   }
 
-  /**
-   * Crear un nuevo tipo de cabaña
-   */
-  async createCabinType(data) {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/admin/cabin-types`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating cabin type:', error);
-      throw error;
-    }
+  createCabinType(data) {
+    return request('/admin/cabin-types', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 
-  /**
-   * Activar/desactivar un tipo de cabaña
-   */
-  async toggleCabinType(typeKey, activo) {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/admin/cabin-types/${typeKey}/toggle`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ activo }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error toggling cabin type:', error);
-      throw error;
-    }
+  toggleCabinType(typeKey, activo) {
+    return request(`/admin/cabin-types/${encodeURIComponent(typeKey)}/toggle`, {
+      method: 'PATCH',
+      body: JSON.stringify({ activo }),
+    });
   }
 
-  /**
-   * Obtener vista previa del menú
-   */
-  async getMenuPreview() {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`${API_BASE_URL}/admin/cabin-types/preview/menu`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching menu preview:', error);
-      throw error;
-    }
+  getMenuPreview() {
+    return request('/admin/cabin-types/preview/menu');
   }
 }
 
