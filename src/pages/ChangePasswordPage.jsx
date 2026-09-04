@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Container, TextField, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-
-const API_URL = process.env.REACT_APP_API_URL;
+import { apiFetch, clearClientSession } from '../services/httpClient';
 
 export default function ChangePasswordPage() {
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -19,15 +18,14 @@ export default function ChangePasswordPage() {
     }
     setSaving(true);
     try {
-      const response = await fetch(`${API_URL}/auth/change-password`, {
+      const response = await apiFetch('/auth/change-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('adminToken')}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword: form.currentPassword, newPassword: form.newPassword })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'No se pudo cambiar la contraseña.');
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
+      clearClientSession();
       navigate('/login', { replace: true });
     } catch (requestError) {
       setError(requestError.message);

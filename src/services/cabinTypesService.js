@@ -1,11 +1,9 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+import { apiFetch } from './httpClient';
 
 async function request(path, options = {}) {
-  const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await apiFetch(path, {
     ...options,
     headers: {
-      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       ...options.headers,
     },

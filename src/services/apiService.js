@@ -1,24 +1,11 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+import { apiFetch } from './httpClient';
 
 class ApiService {
   async request(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
     const { headers: optionHeaders = {}, ...requestOptions } = options;
-    let token = localStorage.getItem('adminToken');
-    // Si no hay token, intentar obtenerlo de sessionStorage (fallback)
-    if (!token) token = sessionStorage.getItem('adminToken');
-    // Si la ruta es /admin/* y no hay token, mostrar advertencia
-    const isAdminRoute = endpoint.startsWith('/admin/');
     const headers = { ...optionHeaders };
     if (!(options.body instanceof FormData) && !headers['Content-Type']) {
       headers['Content-Type'] = 'application/json';
-    }
-    if (isAdminRoute) {
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      } else {
-        console.warn('No se encontró token de autenticación para ruta admin:', endpoint);
-      }
     }
     const config = {
       ...requestOptions,
@@ -26,13 +13,13 @@ class ApiService {
     };
 
     try {
-      const response = await fetch(url, config);
+      const response = await apiFetch(endpoint, config);
       if (!response.ok) {
-        // Si es 401 o 403, mostrar mensaje claro de sesión expirada
-        if (response.status === 401 || response.status === 403) {
-          const errorMsg = 'Sesión expirada o sin permisos. Por favor, vuelve a iniciar sesión.';
-          alert(errorMsg);
-          throw new Error(errorMsg);
+        if (response.status === 401) {
+          throw new Error('La sesión terminó. Vuelve a iniciar sesión.');
+        }
+        if (response.status === 403) {
+          throw new Error('Tu usuario no tiene permiso para realizar esta acción.');
         }
         let payload = {};
         try { payload = await response.json(); } catch { payload = {}; }
@@ -559,11 +546,8 @@ class ApiService {
   }
 
   async downloadReservationsReport(startDate, endDate) {
-    const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
     const query = new URLSearchParams({ start_date: startDate, end_date: endDate });
-    const response = await fetch(`${API_BASE_URL}/admin/dashboard/export?${query.toString()}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await apiFetch(`/admin/dashboard/export?${query.toString()}`);
     if (!response.ok) {
       let data = {}; try { data = await response.json(); } catch { data = {}; }
       throw new Error(data.message || 'No se pudo generar el reporte.');
@@ -747,10 +731,7 @@ class ApiService {
   }
 
   async downloadBackup(filename) {
-    const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
-    const response = await fetch(`${API_BASE_URL}/admin/backup/download/${encodeURIComponent(filename)}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await apiFetch(`/admin/backup/download/${encodeURIComponent(filename)}`);
     if (!response.ok) throw new Error('No se pudo descargar la copia de seguridad.');
     return response.blob();
   }

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Box, Button, Chip, CircularProgress, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import DashboardLayout from '../components/Layout/DashboardLayout';
-
-const API_URL = process.env.REACT_APP_API_URL;
+import { apiFetch } from '../services/httpClient';
 
 export default function AuditLogsPage() {
   const [rows, setRows] = useState([]);
@@ -12,9 +11,7 @@ export default function AuditLogsPage() {
   const load = async () => {
     setLoading(true); setError('');
     try {
-      const response = await fetch(`${API_URL}/admin/audit-logs?limit=100`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-      });
+      const response = await apiFetch('/admin/audit-logs?limit=100');
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'No se pudo cargar la auditoría.');
       setRows(data.data || []);

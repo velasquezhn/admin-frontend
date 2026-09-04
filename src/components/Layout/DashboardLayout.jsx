@@ -30,6 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import { currentAdmin } from '../../utils/adminRoles';
 import { attentionNotificationCount } from '../../utils/notificationStats';
 import apiService from '../../services/apiService';
+import { apiFetch, clearClientSession } from '../../services/httpClient';
 
 const drawerWidth = 280;
 const appEnvironment = process.env.REACT_APP_ENV || 'qa';
@@ -55,9 +56,13 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
+  const handleLogout = async () => {
+    try {
+      await apiFetch('/auth/logout', { method: 'POST' });
+    } catch (_error) {
+      // La sesión local se cierra aunque el servidor no esté disponible.
+    }
+    clearClientSession();
     navigate('/login');
     handleProfileMenuClose();
   };

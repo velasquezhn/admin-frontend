@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import { currentAdmin, normalizeAdminRole } from '../utils/adminRoles';
+import { apiFetch, clearClientSession } from '../services/httpClient';
 
 const PrivateRoute = ({ children, allowedRoles = ['admin', 'superadmin'], allowPasswordChange = false }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -9,18 +10,8 @@ const PrivateRoute = ({ children, allowedRoles = ['admin', 'superadmin'], allowP
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        setIsAuthenticated(false);
-        setIsLoading(false);
-        return;
-      }
-
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/verify`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await apiFetch('/auth/verify', { method: 'POST' });
         setIsAuthenticated(response.ok);
         if (response.ok) {
           const payload = await response.json();
@@ -28,8 +19,7 @@ const PrivateRoute = ({ children, allowedRoles = ['admin', 'superadmin'], allowP
           localStorage.setItem('adminUser', JSON.stringify({ ...stored, ...(payload.data?.user || {}) }));
         }
         if (!response.ok) {
-          localStorage.removeItem('adminToken');
-          localStorage.removeItem('adminUser');
+          clearClientSession();
         }
       } catch (_error) {
         setIsAuthenticated(false);

@@ -47,4 +47,6 @@ Después de publicar el frontend, agregue su URL exacta a `CORS_ORIGIN` en el ba
 - No versione `.env` ni secretos.
 - El panel guarda el JWT administrativo en `localStorage`; use siempre HTTPS.
 - No existe inicio de sesión automático ni credenciales predeterminadas.
-- Si la API rechaza el JWT, la sesión local se elimina y se solicita iniciar sesión nuevamente.
+- La API crea una cookie de sesión `HttpOnly`; todas las solicitudes incluyen credenciales y la cabecera de seguridad del panel.
+- El token de compatibilidad se conserva solo durante la pestaña actual, no de forma permanente. Las sesiones antiguas siguen funcionando durante la transición.
+- Al cerrar sesión, el panel invalida la sesión en el servidor y elimina cualquier dato de sesión local.

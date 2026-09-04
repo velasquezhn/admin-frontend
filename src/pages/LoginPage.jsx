@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Button, TextField, Typography, Container } from '@mui/material';
+import { apiFetch, clearClientSession } from '../services/httpClient';
 
 const appEnvironment = process.env.REACT_APP_ENV || 'qa';
 
@@ -15,7 +16,7 @@ const LoginPage = () => {
     setError('');
     
     try {
-  const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/login`, {
+      const response = await apiFetch('/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -26,7 +27,8 @@ const LoginPage = () => {
       const data = await response.json();
       
       if (data.success && data.data) {
-        localStorage.setItem('adminToken', data.data.token);
+        clearClientSession();
+        if (data.data.token) sessionStorage.setItem('adminToken', data.data.token);
         localStorage.setItem('adminUser', JSON.stringify(data.data.user));
         navigate(data.data.user.mustChangePassword ? '/change-password' : '/');
       } else {

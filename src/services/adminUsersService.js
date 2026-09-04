@@ -1,28 +1,21 @@
-const API_BASE = process.env.REACT_APP_API_URL;
+import { apiFetch } from './httpClient';
 
 class AdminUsersService {
   constructor() {
-    this.baseUrl = `${API_BASE}/admin/admin-users`;
-  }
-
-  // Obtener token de localStorage
-  getAuthToken() {
-    return localStorage.getItem('adminToken');
+    this.baseUrl = '/admin/admin-users';
   }
 
   // Headers por defecto
   getHeaders() {
-    const token = this.getAuthToken();
     return {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
     };
   }
 
   // Obtener todos los administradores
   async getAllAdmins() {
     try {
-      const response = await fetch(this.baseUrl, {
+      const response = await apiFetch(this.baseUrl, {
         method: 'GET',
         headers: this.getHeaders(),
       });
@@ -42,7 +35,7 @@ class AdminUsersService {
   // Crear nuevo administrador
   async createAdmin(adminData) {
     try {
-      const response = await fetch(this.baseUrl, {
+      const response = await apiFetch(this.baseUrl, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(adminData),
@@ -63,7 +56,7 @@ class AdminUsersService {
   // Actualizar datos de administrador
   async updateAdmin(adminId, adminData) {
     try {
-      const response = await fetch(`${this.baseUrl}/${adminId}`, {
+      const response = await apiFetch(`${this.baseUrl}/${adminId}`, {
         method: 'PUT',
         headers: this.getHeaders(),
         body: JSON.stringify(adminData),
@@ -84,7 +77,7 @@ class AdminUsersService {
   // Cambiar contraseña de administrador
   async changePassword(adminId, passwordData) {
     try {
-      const response = await fetch(`${this.baseUrl}/${adminId}/password`, {
+      const response = await apiFetch(`${this.baseUrl}/${adminId}/password`, {
         method: 'PUT',
         headers: this.getHeaders(),
         body: JSON.stringify(passwordData),
@@ -105,7 +98,7 @@ class AdminUsersService {
   // Activar/desactivar administrador
   async toggleAdminStatus(adminId, isActive) {
     try {
-      const response = await fetch(`${this.baseUrl}/${adminId}/toggle`, {
+      const response = await apiFetch(`${this.baseUrl}/${adminId}/toggle`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: JSON.stringify({ isActive }),
@@ -126,7 +119,7 @@ class AdminUsersService {
   // Eliminar administrador (soft delete)
   async deleteAdmin(adminId) {
     try {
-      const response = await fetch(`${this.baseUrl}/${adminId}`, {
+      const response = await apiFetch(`${this.baseUrl}/${adminId}`, {
         method: 'DELETE',
         headers: this.getHeaders(),
       });

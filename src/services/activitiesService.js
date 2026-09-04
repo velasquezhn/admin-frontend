@@ -1,14 +1,11 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+import { apiFetch } from './httpClient';
 
 const activitiesService = {
   // Obtener todas las actividades
   getAllActivities: async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      
-      const response = await fetch(`${API_BASE_URL}/admin/activities`, {
+      const response = await apiFetch('/admin/activities', {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -28,11 +25,8 @@ const activitiesService = {
   // Obtener una actividad específica
   getActivity: async (activityKey) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      
-      const response = await fetch(`${API_BASE_URL}/admin/activities/${activityKey}`, {
+      const response = await apiFetch(`/admin/activities/${activityKey}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -52,12 +46,9 @@ const activitiesService = {
   // Actualizar actividad
   updateActivity: async (activityKey, updateData) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      
-      const response = await fetch(`${API_BASE_URL}/admin/activities/${activityKey}`, {
+      const response = await apiFetch(`/admin/activities/${activityKey}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(updateData)
@@ -78,12 +69,9 @@ const activitiesService = {
   // Cambiar estado activo/inactivo
   toggleActivity: async (activityKey, activo) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      
-      const response = await fetch(`${API_BASE_URL}/admin/activities/${activityKey}/toggle`, {
+      const response = await apiFetch(`/admin/activities/${activityKey}/toggle`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ activo })
@@ -104,12 +92,9 @@ const activitiesService = {
   // Crear nueva actividad
   createActivity: async (activityData) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      
-      const response = await fetch(`${API_BASE_URL}/admin/activities`, {
+      const response = await apiFetch('/admin/activities', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(activityData)
@@ -130,11 +115,8 @@ const activitiesService = {
   // Obtener vista previa del menú dinámico para el bot
   getMenuPreview: async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      
-      const response = await fetch(`${API_BASE_URL}/admin/activities/menu/preview`, {
+      const response = await apiFetch('/admin/activities/menu/preview', {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
