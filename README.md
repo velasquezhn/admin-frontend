@@ -50,3 +50,4 @@ Después de publicar el frontend, agregue su URL exacta a `CORS_ORIGIN` en el ba
 - La API crea una cookie de sesión `HttpOnly`; todas las solicitudes incluyen credenciales y la cabecera de seguridad del panel.
 - El token de compatibilidad se conserva solo durante la pestaña actual, no de forma permanente. Las sesiones antiguas siguen funcionando durante la transición.
 - Al cerrar sesión, el panel invalida la sesión en el servidor y elimina cualquier dato de sesión local.
+- El panel no sustituye errores de la API con reservas, huéspedes o cabañas ficticias: lo mostrado proviene del entorno conectado.
