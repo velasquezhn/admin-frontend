@@ -41,7 +41,7 @@ import {
   Search as SearchIcon,
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
+  EventBusy as CancelReservationIcon,
   Check as CheckIcon,
   Download as DownloadIcon,
   FilterList as FilterIcon,
@@ -61,6 +61,7 @@ import apiService from '../services/apiService';
 
 const PENDING_STATUSES = ['pendiente_autorizacion', 'esperando_pago', 'pendiente_verificacion'];
 const REJECTABLE_STATUSES = new Set(PENDING_STATUSES);
+const CANCELLABLE_STATUSES = new Set([...PENDING_STATUSES, 'confirmada', 'confirmado']);
 
 /**
  * 🏨 INTERFAZ PROFESIONAL DE GESTIÓN DE RESERVAS MEJORADA
@@ -277,7 +278,7 @@ const ReservationsPageSimplePro = () => {
       fetchReservations();
     } catch (error) {
       console.error('Error saving reservation:', error);
-      showSnackbar('Error al guardar la reserva', 'error');
+      showSnackbar(error.message || 'Error al guardar la reserva', 'error');
     }
   };
 
@@ -333,14 +334,16 @@ const ReservationsPageSimplePro = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Está seguro de que desea eliminar esta reserva?')) {
+    if (window.confirm('¿Cancelar esta reserva? El registro se conservará en el historial y se notificará al huésped.')) {
       try {
-        await apiService.deleteReservation(id);
-        showSnackbar('Reserva eliminada exitosamente', 'success');
+        const result = await apiService.deleteReservation(id);
+        showSnackbar(result.notificationSent
+          ? 'Reserva cancelada y huésped notificado'
+          : 'Reserva cancelada; el aviso al huésped quedó pendiente', result.notificationSent ? 'success' : 'warning');
         fetchReservations();
       } catch (error) {
-        console.error('Error deleting reservation:', error);
-        showSnackbar('Error al eliminar la reserva', 'error');
+        console.error('Error cancelling reservation:', error);
+        showSnackbar(error.message || 'No se pudo cancelar la reserva', 'error');
       }
     }
   };
@@ -823,7 +826,7 @@ const ReservationsPageSimplePro = () => {
                                   <EditIcon fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Eliminar reserva">
+                              {CANCELLABLE_STATUSES.has(reservation.status) && <Tooltip title="Cancelar y conservar en el historial">
                                 <IconButton
                                   size="small"
                                   onClick={() => handleDelete(reservation.reservation_id)}
@@ -832,9 +835,9 @@ const ReservationsPageSimplePro = () => {
                                     '&:hover': { backgroundColor: 'rgba(211, 47, 47, 0.1)' }
                                   }}
                                 >
-                                  <DeleteIcon fontSize="small" />
+                                  <CancelReservationIcon fontSize="small" />
                                 </IconButton>
-                              </Tooltip>
+                              </Tooltip>}
                             </Box>
                           </TableCell>
                         </TableRow>
@@ -942,21 +945,9 @@ const ReservationsPageSimplePro = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl fullWidth required>
-                <InputLabel>Estado</InputLabel>
-                <Select
-                  value={formData.status}
-                  label="Estado"
-                  onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-                >
-                  <MenuItem value="pendiente_autorizacion">🟡 Espera autorización</MenuItem>
-                  <MenuItem value="esperando_pago">🔵 Pago autorizado</MenuItem>
-                  <MenuItem value="pendiente_verificacion">🟣 Revisar comprobante</MenuItem>
-                  <MenuItem value="confirmada">🟢 Confirmada</MenuItem>
-                  <MenuItem value="cancelada">🔴 Cancelada</MenuItem>
-                  <MenuItem value="rechazada">🔴 Rechazada</MenuItem>
-                </Select>
-              </FormControl>
+              <Alert severity="info">
+                Estado: <strong>{getStatusLabel(formData.status)}</strong>. Los estados cambian únicamente con las acciones de la tabla.
+              </Alert>
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField

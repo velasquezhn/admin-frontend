@@ -70,4 +70,21 @@ describe('acciones administrativas de reservas', () => {
     await apiService.createBackup();
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/backup/create'), expect.objectContaining({ method: 'POST' }));
   });
+
+  it('convierte los campos numéricos al crear una reserva administrativa', async () => {
+    const { default: apiService } = await import('./apiService');
+    await apiService.createReservation({
+      cabin_id: '2', user_id: '4', start_date: '2026-10-10', end_date: '2026-10-12',
+      status: 'pendiente_autorizacion', total_price: '3000', personas: '3'
+    });
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toMatchObject({
+      cabin_id: 2, user_id: 4, total_price: 3000, number_of_people: 3
+    });
+  });
+
+  it('cancela sin borrar físicamente mediante la acción administrativa', async () => {
+    const { default: apiService } = await import('./apiService');
+    await apiService.deleteReservation(9);
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/admin/reservations/9'), expect.objectContaining({ method: 'DELETE' }));
+  });
 });

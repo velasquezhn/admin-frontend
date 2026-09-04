@@ -111,13 +111,13 @@ class ApiService {
   async createReservation(reservation) {
     // Mapear los campos al formato correcto del backend
     const requestData = {
-      cabin_id: reservation.cabin_id,
-      user_id: reservation.user_id,
+      cabin_id: Number(reservation.cabin_id),
+      user_id: Number(reservation.user_id),
       start_date: reservation.start_date,
       end_date: reservation.end_date,
       status: reservation.status,
-      total_price: reservation.total_price,
-      number_of_people: reservation.personas || reservation.number_of_people
+      total_price: Number(reservation.total_price),
+      number_of_people: Number(reservation.personas || reservation.number_of_people)
     };
     
     return this.request('/admin/reservations', {
@@ -129,13 +129,13 @@ class ApiService {
   async updateReservation(id, reservation) {
     // Mapear los campos al formato correcto del backend
     const requestData = {
-      cabin_id: reservation.cabin_id,
-      user_id: reservation.user_id,
+      cabin_id: Number(reservation.cabin_id),
+      user_id: Number(reservation.user_id),
       start_date: reservation.start_date,
       end_date: reservation.end_date,
       status: reservation.status,
-      total_price: reservation.total_price,
-      number_of_people: reservation.personas || reservation.number_of_people
+      total_price: Number(reservation.total_price),
+      number_of_people: Number(reservation.personas || reservation.number_of_people)
     };
     
     return this.request(`/admin/reservations/${id}`, {
