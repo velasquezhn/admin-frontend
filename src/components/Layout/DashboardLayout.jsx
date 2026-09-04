@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   CssBaseline,
@@ -28,6 +28,8 @@ import {
 import Sidebar from './Sidebar';
 import { useNavigate } from 'react-router-dom';
 import { currentAdmin } from '../../utils/adminRoles';
+import { attentionNotificationCount } from '../../utils/notificationStats';
+import apiService from '../../services/apiService';
 
 const drawerWidth = 280;
 const appEnvironment = process.env.REACT_APP_ENV || 'qa';
@@ -39,6 +41,7 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
   
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
   
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -60,6 +63,19 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
   };
 
   const user = currentAdmin();
+
+  useEffect(() => {
+    if (user.role !== 'superadmin') return undefined;
+    let active = true;
+    apiService.getNotifications()
+      .then((response) => {
+        if (active) setNotificationCount(attentionNotificationCount(response.stats));
+      })
+      .catch(() => {
+        if (active) setNotificationCount(0);
+      });
+    return () => { active = false; };
+  }, [user.role]);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'grey.50' }}>
@@ -111,13 +127,15 @@ const DashboardLayout = ({ children, title = 'Dashboard' }) => {
           )}
 
           {/* Notifications */}
-          <Tooltip title="Notificaciones">
-            <IconButton color="inherit" sx={{ mr: 1 }}>
-              <Badge badgeContent={3} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-          </Tooltip>
+          {user.role === 'superadmin' && (
+            <Tooltip title="Mensajes de WhatsApp que requieren atención">
+              <IconButton color="inherit" sx={{ mr: 1 }} onClick={() => navigate('/notifications')}>
+                <Badge badgeContent={notificationCount} color="error">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+          )}
 
           {/* Profile Menu */}
           <IconButton
