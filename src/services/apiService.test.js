@@ -82,6 +82,15 @@ describe('acciones administrativas de reservas', () => {
     });
   });
 
+  it('convierte el estado antiguo al estado aceptado por la API', async () => {
+    const { default: apiService } = await import('./apiService');
+    await apiService.createReservation({
+      cabin_id: '2', user_id: '4', start_date: '2027-11-01', end_date: '2027-11-03',
+      status: 'pendiente', total_price: '3000', personas: '3'
+    });
+    expect(JSON.parse(fetch.mock.calls[0][1].body).status).toBe('pendiente_autorizacion');
+  });
+
   it('cancela sin borrar físicamente mediante la acción administrativa', async () => {
     const { default: apiService } = await import('./apiService');
     await apiService.deleteReservation(9);

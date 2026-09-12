@@ -59,6 +59,12 @@ import {
 } from '@mui/icons-material';
 import DashboardLayout from '../components/Layout/DashboardLayout';
 import apiService from '../services/apiService';
+import {
+  DEFAULT_RESERVATION_STATUS,
+  findUserByPhone,
+  normalizePhone,
+  reservationErrorMessage
+} from './reservationFormUtils';
 
 // Utilidad para calcular precio basado en las reglas del negocio
 const calculatePrice = (cabinType, startDate, endDate) => {
@@ -170,7 +176,7 @@ const CrearReserva = () => {
       setLoading(prev => ({ ...prev, save: true }));
       const userPayload = {
         name: newUserData.name,
-        phone_number: newUserData.phone_number,
+        phone_number: normalizePhone(newUserData.phone_number),
         role: 'guest',
         is_active: 1
       };
@@ -178,7 +184,7 @@ const CrearReserva = () => {
       // El backend responde { success, user_id }
       if (result && result.success && result.user_id) {
         await loadUsers();
-        setFormData(prev => ({ ...prev, user_id: result.user_id, phone_number: newUserData.phone_number }));
+        setFormData(prev => ({ ...prev, user_id: result.user_id, phone_number: normalizePhone(newUserData.phone_number) }));
         setUserModalMessage({ type: 'success', text: 'Usuario creado exitosamente' });
         setTimeout(() => {
           setShowUserModal(false);
@@ -222,7 +228,7 @@ const CrearReserva = () => {
     end_date: '',
     personas: '',
     total_price: 0,
-    status: 'pendiente'
+    status: DEFAULT_RESERVATION_STATUS
   });
   
   // Estados de validación y UI
@@ -277,9 +283,11 @@ const CrearReserva = () => {
       // El backend responde { success, data: [...] }
       const usersData = usersResult && Array.isArray(usersResult.data) ? usersResult.data : [];
       setUsers(usersData);
+      return usersData;
     } catch (err) {
       console.error('Error loading users:', err);
-      setError('Error al cargar usuarios');
+      setError(reservationErrorMessage(err));
+      return [];
     } finally {
       setLoading(prev => ({ ...prev, users: false }));
     }
@@ -404,19 +412,13 @@ const CrearReserva = () => {
       return;
     }
     // Buscar usuario por número de teléfono
-    let foundUser = null;
-    // Si no hay usuarios cargados, intenta cargarlos
-    if (users.length === 0) {
-      try {
-        await loadUsers();
-      } catch (err) {
-        // Si falla, igual sigue con users vacíos
-      }
-    }
-    foundUser = users.find(u => u.phone_number === phone);
+    let availableUsers = users;
+    if (availableUsers.length === 0) availableUsers = await loadUsers();
+    const foundUser = findUserByPhone(availableUsers, phone);
     if (foundUser) {
-      setFormData(prev => ({ ...prev, user_id: foundUser.user_id || foundUser.id, phone_number: phone }));
+      setFormData(prev => ({ ...prev, user_id: foundUser.user_id || foundUser.id, phone_number: normalizePhone(phone) }));
       setValidationErrors(prev => ({ ...prev, phone_number: null }));
+      setActiveStep(3);
     } else {
       setFormData(prev => ({ ...prev, user_id: '', phone_number: phone }));
       setValidationErrors(prev => ({ ...prev, phone_number: 'Usuario no encontrado, puedes crearlo con el botón ➕' }));
@@ -461,7 +463,7 @@ const CrearReserva = () => {
       resumen += `<b>Usuario:</b> ${formData.phone_number}<br/>`;
       resumen += `<b>Fechas:</b> ${formData.start_date} a ${formData.end_date}<br/>`;
       resumen += `<b>Total:</b> L ${formData.total_price.toLocaleString('es-HN')}<br/>`;
-      resumen += `<b>Estado:</b> pendiente`;
+      resumen += `<b>Estado:</b> Pendiente de autorización`;
       setSuccess({ __html: 'Reserva creada exitosamente.<br/>' + resumen });
       // Resetear formulario después de un tiempo
       setTimeout(() => {
@@ -470,7 +472,7 @@ const CrearReserva = () => {
       }, 5000);
     } catch (err) {
       console.error('Error saving reservation:', err);
-      setError('Error al guardar la reserva');
+      setError(reservationErrorMessage(err));
     } finally {
       setLoading(prev => ({ ...prev, save: false }));
     }
@@ -486,7 +488,7 @@ const CrearReserva = () => {
       end_date: '',
       personas: '',
       total_price: 0,
-      status: 'pendiente'
+      status: DEFAULT_RESERVATION_STATUS
     });
     setFieldsEnabled({
       personas: false,

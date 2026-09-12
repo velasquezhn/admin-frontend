@@ -115,7 +115,7 @@ class ApiService {
       user_id: Number(reservation.user_id),
       start_date: reservation.start_date,
       end_date: reservation.end_date,
-      status: reservation.status,
+      status: reservation.status === 'pendiente' ? 'pendiente_autorizacion' : reservation.status,
       total_price: Number(reservation.total_price),
       number_of_people: Number(reservation.personas || reservation.number_of_people)
     };
@@ -262,7 +262,7 @@ class ApiService {
         // Filter reservations for this cabin that are confirmed or pending
         const cabinReservations = reservations.filter(r => 
           (r.cabin_id === cabinId) && 
-          (r.status === 'confirmada' || r.status === 'confirmado' || r.status === 'pendiente')
+          ['confirmada', 'confirmado', 'pendiente_autorizacion', 'esperando_pago', 'pendiente_verificacion'].includes(r.status)
         );
         
         const occupiedDates = [];
